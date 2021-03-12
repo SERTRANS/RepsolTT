@@ -94,9 +94,28 @@ namespace RepsolTT
         }
 
       
+        public static string DimeDepartamento(string codPostal, Int32 kg, string Pais)
+        {
+            if (Pais != "ES")
+                return "21";
 
+            if ("43170825".Contains(codPostal.Substring(0, 2)) && kg < 17000 && Pais == "ES")            
+                return "4";
+            
+            if ("43170825".Contains(codPostal.Substring(0, 2)) && kg > 17000 && Pais == "ES")
+                return "8";
 
+            if (!"43170825".Contains(codPostal.Substring(0, 2)) && Pais == "ES")
+                return "23";
 
+            return "8";
+
+        }
+
+        public static bool IsNull(  object source)
+        {
+            return source == null;
+        }
 
     }
 }

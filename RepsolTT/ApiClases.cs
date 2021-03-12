@@ -144,11 +144,47 @@ namespace RepsolTT
 
         }
 
+        public static void validarRutaBajda(string token,Int64 idruta)
+        {
+            var client = new RestClient(Models.clsUtils.GlobalVariables.Api + "/entities/RUTAS/rows");
+            client.Timeout = -1;
+            var request = new RestRequest(Method.PUT);
+            request.AddHeader("fieldeas-token", token);
+            request.AddHeader("Content-Type", "application/json");
+
+            #region Body
+            string Body = "{" +
+                               "      \"data\": [ " +
+                               "         [" +
+                               "             {  " +
+                               "                 \"key\": \"ID_RUTA\",  " +
+                               "                 \"value\": " + idruta + "  " +
+                               "             },  " +
+                               "             {  " +
+                               "                 \"key\": \"FLAG_1\",  " +
+                               "                 \"value\": 0  " +
+                               "             }  " +
+                               "         ] " +
+                               "     ] " +
+                               " }";
+            #endregion
+
+
+
+            request.AddParameter("application/json", Body, ParameterType.RequestBody);
+            IRestResponse response = client.Execute(request);
+            Console.WriteLine(response.Content);
+            Models.clsUtils.retornoApi vRetApi = new Models.clsUtils.retornoApi();
+            vRetApi = JsonConvert.DeserializeObject<Models.clsUtils.retornoApi>(response.Content);
+            
+
+        }
+
         public static List<string> DameTodasRutas(string token)
         {
          //   Models.clsUtils.DatosRuta vRetApi = null;
 
-            var client = new RestClient(Models.clsUtils.GlobalVariables.Api + "/entities/RUTAS/query?offset=0&limit=950");
+            var client = new RestClient(Models.clsUtils.GlobalVariables.Api + "/entities/RUTAS/query?offset=0&limit=1150");
             client.Timeout = -1;
             var request = new RestRequest(Method.POST);
             request.AddHeader("fieldeas-token", token);
@@ -185,12 +221,15 @@ namespace RepsolTT
         
 
             List<string> listaAlbaranes = new List<string>();
+           
             for (int i = 0; i < array.Length; i++)
             {
+
                 if (array[i].Contains("CODIGO_RUTA"))
                 {
-                    i++;
+                    i++;                    
                     listaAlbaranes.Add(Limpia(array[i]));
+                    
                 }
             }
 
@@ -222,7 +261,8 @@ namespace RepsolTT
 
 
        public static void GeneraEdi(string token ,List<string> listaAlbaranes)
-        {
+        { 
+
             foreach (string item in listaAlbaranes)
             {
                 Models.clsUtils.ProtocoloEdi edi = new Models.clsUtils.ProtocoloEdi();
@@ -450,13 +490,31 @@ namespace RepsolTT
             Tot.CodigoPostalDestinatario = Descarga.CodigoPostalDestinatario;
             Tot.CodigoPaisDestinatario = Descarga.CodigoPaisDestinatario;
 
-            Tot.BaremoPalets = carga.BaremoPalets;
-            Tot.BaremoPesoBruto = carga.BaremoPesoBruto;
-            Tot.BaremoVolumen = carga.BaremoVolumen;
-            Tot.BaremoBultos = carga.BaremoBultos;
+
+
+
+            Tot.BaremoPalets = Utils.IsNull(carga.BaremoPalets) ? "0" : carga.BaremoPalets;
+            Tot.BaremoPesoBruto = Utils.IsNull(carga.BaremoPesoBruto) ? "0" : carga.BaremoPesoBruto; 
+            Tot.BaremoVolumen = Utils.IsNull(carga.BaremoVolumen) ? "0" : carga.BaremoVolumen; 
+            Tot.BaremoBultos = Utils.IsNull(carga.BaremoBultos) ? "0" : carga.BaremoBultos; 
+
+            Int32 kg;
+            carga.BaremoPesoBruto = carga.BaremoPesoBruto.Replace(".0","");
+
+            if (Utils.IsNumeric(carga.BaremoPesoBruto))
+                kg = Convert.ToInt32(carga.BaremoPesoBruto);
+            else
+                kg = 0;
+
+
+            Tot.Departamento = Utils.DimeDepartamento(Descarga.CodigoPostalDestinatario, kg, Descarga.CodigoPaisDestinatario);
+
+
 
             string ficheroCadena;
             ficheroCadena = generaEdiCadena(Tot);
+
+
 
 
             return ficheroCadena;
@@ -485,6 +543,7 @@ namespace RepsolTT
 
             
             ProtocoloEdi.AlbaranOrdenante = vRetApi.route_code;
+            ProtocoloEdi.idRuta  = vRetApi.id;
 
 
 
@@ -501,16 +560,16 @@ namespace RepsolTT
                 {
 
                     Models.clsUtils.ProtocoloEdiDatos ProtocoloEdiDatos = new Models.clsUtils.ProtocoloEdiDatos();
-                    //DateTimeOffset vTmpFecha = DateTimeOffset.FromUnixTimeSeconds(epochSeconds);
+                    
 
                     DateTime  vfecha = Utils.FromUnixTime(Convert.ToInt64(para.faraway_planned_timestamp));
 
                     ProtocoloEdiDatos.FechaSalidaExpedicion = vfecha.ToString("dd/MM/yyyy");
                     ProtocoloEdiDatos.HoraAcordadaSalida = vfecha.ToString("hh:mm");
 
-
                     ProtocoloEdiDatos.CargaDescarga = "C";
                     ProtocoloEdiDatos.AlbaranOrdenante= vRetApi.route_code;
+                    ProtocoloEdiDatos.idRuta= vRetApi.id ;
                     ProtocoloEdiDatos.NombreRemitente = para.name;
                     ProtocoloEdiDatos.DomicilioRemitente = para.address;
                     ProtocoloEdiDatos.PoblacionRemitente = para.city;

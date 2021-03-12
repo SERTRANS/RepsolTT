@@ -62,11 +62,13 @@ namespace RepsolTT.Models
         #region   Protocolo Edi campos
         public class ProtocoloEdi
         {
+            public Int64 idRuta { get; set; }
             public string AlbaranOrdenante { get; set; }
             public List<ProtocoloEdiDatos> ProtocoloEdiDatosLista { get; set; }
         }
         public class ProtocoloEdiDatos
         {
+            public Int64 idRuta { get; set; }
             public string CargaDescarga { get; set; }
             public string AlbaranOrdenante { get; set; }
             public string FechaSalidaExpedicion { get; set; }
@@ -89,7 +91,8 @@ namespace RepsolTT.Models
             public string BaremoBultos { get; set; }
             public string BaremoMetrosLineales { get; set; }
             public string Observaciones1 { get; set; }
-            public string Observaciones2 { get; set; }            
+            public string Observaciones2 { get; set; }
+            public string Departamento { get; set; }
 
         }
 
@@ -258,5 +261,11 @@ namespace RepsolTT.Models
 
         #endregion
 
+
+        public class IdRuta
+        {
+            public Int64 Id { get; set; }
+            public string Ruta { get; set; }
+        }
     }
 }

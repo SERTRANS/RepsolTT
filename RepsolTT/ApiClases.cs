@@ -272,22 +272,26 @@ namespace RepsolTT
 
                     List<int> NCargasDescargas = new List<int>();
                     NCargasDescargas = NumeroCargasDescargas(edi);
-
+                    
                     if (NCargasDescargas[0] == 1 && NCargasDescargas[1] == 1)
                     {
                         string ficheroCadena;
                         ficheroCadena = unoAuno(edi);
                         Utils.GuardaEdi(ficheroCadena, item.Trim());                        
                     }
-
                     //Dos cargas un destino
-                    if (NCargasDescargas[0] == 2 && NCargasDescargas[1] == 1)
-                    {
-                        string ficheroCadena;
-                        ficheroCadena = dosAuno(edi);
-                        Utils.GuardaEdi(ficheroCadena, item.Trim());
+                    else                     
+                        if (NCargasDescargas[0] == 2 && NCargasDescargas[1] == 1)
+                        {
+                            string ficheroCadena;
+                            ficheroCadena = dosAuno(edi);
+                            Utils.GuardaEdi(ficheroCadena, item.Trim());
 
-                    } 
+                        } 
+                    else
+                    {
+                        Console.WriteLine("Tragedia");
+                    }
 
                 } 
 

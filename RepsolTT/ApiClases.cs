@@ -469,8 +469,7 @@ namespace RepsolTT
             Models.clsUtils.ProtocoloEdi ProtocoloEdi = new Models.clsUtils.ProtocoloEdi();
 
             ProtocoloEdi.ProtocoloEdiDatosLista  = new List<Models.clsUtils.ProtocoloEdiDatos>();
-
-            
+           
              
             Models.clsUtils.DatosRuta vRetApi = new Models.clsUtils.DatosRuta(); //todos los datos de la ruta
             vRetApi = DameDatosRuta(  token, Albaran);

@@ -1,15 +1,6 @@
-﻿using ComunesRedux;
-using RestSharp;
+﻿ 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+ 
 
 namespace RepsolTT
 {
@@ -17,35 +8,62 @@ namespace RepsolTT
     {
         static void Main(string[] args)
         {
+            Utils.CargaVariables();         
+
+                if (args.Length > 0)
+                {
+                    Console.WriteLine("PARAMETROS");
+                    foreach (Object argumento in args)
+                    {
+                        string argument = argumento.ToString();
+                        switch (argument.ToString().ToUpper())
+                        {
+                            case "GENERAR_NUEVAS_RUTAS":
+                                ApiClases.generaRutas();
+                                break;
+                            case "GENERAR_FICHERO":
+                                ApiClases.crearRutas();
+                                break;
+                            case "ACTUALIZAR_FLAG":
+                                ApiClases.Validacion();
+                                break;
+                            case "INFO_RUTA":
+                                ApiClases.InfoRuta();
+                                break;
+                        }
+                    }
+                } 
 
 
+                string[] MiMenu = new string[] { "GENERAR_NUEVAS_RUTAS", "GENERAR_FICHERO", "ACTUALIZAR_FLAG", "INFO_RUTA","SALIR" };
 
-     //       DateTime m = Utils.FromUnixTime(1604656800000);
+                string devMenu = Utils.Menu(MiMenu);
 
-            CargaVariables();
-        
-
-            string token;
-            token = ApiClases.DameToken();
+                if (devMenu == "SALIR") Environment.Exit(0);
 
 
-            if (token != "")
-            {
+                switch (devMenu)
+                //switch (Console.Read())
+                {
+                    case "GENERAR_NUEVAS_RUTAS":
+                        ApiClases.generaRutas();
+                        break;
+                    case "GENERAR_FICHERO":
+                        ApiClases.crearRutas();
+                        break;
+                    case "ACTUALIZAR_FLAG":
+                        ApiClases.Validacion();
+                        break;
+                    case "INFO_RUTA":
+                        ApiClases.InfoRuta();
+                        break;
+                }
 
-                
-
-//                Models.clsUtils.ProtocoloEdi DameRutas = new Models.clsUtils.ProtocoloEdi();
-                List<string> listaAlbaranes = new List<string>();
-                listaAlbaranes= ApiClases.DameTodasRutas(token);
-                ApiClases.GeneraEdi(token, listaAlbaranes);
-            }
-            else
-
-            {
-                Console.WriteLine(DateTime.Now.ToString() + ",ERROR CONSIGUIENDO TOKEN");
-
-            }
-
+                Console.WriteLine("PULSA TECLA PARA SALIDA");
+                Console.ReadKey();
+                Environment.Exit(0);
+             
+             
 
             //if (token != "")
             //{
@@ -71,16 +89,7 @@ namespace RepsolTT
 
 
         }
-        public static void CargaVariables()
-        {
-
-            Models.clsUtils.GlobalVariables.Api = System.Configuration.ConfigurationManager.AppSettings["Api"].ToString();
-            Models.clsUtils.GlobalVariables.API_KEY = System.Configuration.ConfigurationManager.AppSettings["API_KEY"].ToString();
-            Models.clsUtils.GlobalVariables.Usuario = System.Configuration.ConfigurationManager.AppSettings["Usuario"].ToString();
-            Models.clsUtils.GlobalVariables.Password =  Utils.Base64Decode( System.Configuration.ConfigurationManager.AppSettings["Password"].ToString());
-            Models.clsUtils.GlobalVariables.RutaEDI = System.Configuration.ConfigurationManager.AppSettings["RutaEDI"].ToString();
-            
-        }
+    
 
 
 

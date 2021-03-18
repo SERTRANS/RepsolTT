@@ -12,20 +12,22 @@ namespace RepsolTT
             Utils.CargaVariables();
 
 
-            //ApiClases.nou();Environment.Exit(0);
+           //ApiClases.ConsigueAlbaranes();Environment.Exit(0);
+            
+          // ApiClases.ConsigueUnSoloAlbaran(); Environment.Exit(0);
 
 
 
-            //            ApiClases.generaRutas(); Environment.Exit(0);
-                        ApiClases.crearUnaSolaRuta();            Environment.Exit(0);
+
+            //  ApiClases.generaRutas(); Environment.Exit(0);
+            //ApiClases.crearUnaSolaRuta();            Environment.Exit(0);
 
 
-        //    ApiClases.Validacion(); Environment.Exit(0);
+            //    ApiClases.Validacion(); Environment.Exit(0);
 
             if (args.Length==0)
             { 
-                ApiClases.generaRutas();
-                Environment.Exit(0);
+                ApiClases.ConsigueAlbaranes();Environment.Exit(0);
             }
 
             if (args.Length > 0)                {                    
@@ -35,11 +37,11 @@ namespace RepsolTT
                         switch (argument.ToString().ToUpper())
                         {
                             case "GENERAR_NUEVAS_RUTAS":
-                                ApiClases.generaRutas();
+                                ApiClases.ConsigueAlbaranes();
                             Environment.Exit(0);
                             break;
                             case "GENERAR_FICHERO":
-                                ApiClases.crearUnaSolaRuta();
+                                ApiClases.ConsigueUnSoloAlbaran();
                             Environment.Exit(0);
                             break;
                             case "ACTUALIZAR_FLAG":
@@ -65,10 +67,10 @@ namespace RepsolTT
                 //switch (Console.Read())
                 {
                     case "GENERAR_NUEVAS_RUTAS":
-                        ApiClases.generaRutas();
+                        ApiClases.ConsigueAlbaranes();
                         break;
                     case "GENERAR_FICHERO":
-                        ApiClases.crearUnaSolaRuta();
+                        ApiClases.ConsigueUnSoloAlbaran();
                         break;
                     case "ACTUALIZAR_FLAG":
                         ApiClases.Validacion();

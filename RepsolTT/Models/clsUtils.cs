@@ -75,6 +75,8 @@ namespace RepsolTT.Models
             public string HoraAcordadaSalida { get; set; }
             public string FechaEntregaExpedicion { get; set; }
             public string HoraAcordadaEntrega { get; set; }
+            public string Tipo { get; set; }
+            public string Linea { get; set; }
             public string NombreRemitente { get; set; }
             public string DomicilioRemitente { get; set; }
             public string PoblacionRemitente { get; set; }
@@ -93,6 +95,7 @@ namespace RepsolTT.Models
             public string Observaciones1 { get; set; }
             public string Observaciones2 { get; set; }
             public string Departamento { get; set; }
+            public string OrderId { get; set; }
 
         }
 
@@ -267,5 +270,18 @@ namespace RepsolTT.Models
             public Int64 Id { get; set; }
             public string Ruta { get; set; }
         }
+
+        public class ModelEmail
+        {
+            public List<string> direccionesPara { get; set; }
+            public List<string> direccionesCopia { get; set; }
+            public List<string> direccionesCopiaOculta { get; set; }
+            public string asunto { get; set; }
+            public string mensaje { get; set; }
+            public string fichero { get; set; }
+            public bool isBodyHtml { get; set; }
+        }
+
+
     }
 }

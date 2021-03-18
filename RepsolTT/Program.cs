@@ -1,6 +1,7 @@
-﻿ 
+﻿
+using ComunesRedux;
 using System;
- 
+using System.Collections;
 
 namespace RepsolTT
 {
@@ -8,11 +9,26 @@ namespace RepsolTT
     {
         static void Main(string[] args)
         {
-            Utils.CargaVariables();         
+            Utils.CargaVariables();
 
-                if (args.Length > 0)
-                {
-                    Console.WriteLine("PARAMETROS");
+
+            //ApiClases.nou();Environment.Exit(0);
+
+
+
+            //            ApiClases.generaRutas(); Environment.Exit(0);
+                        ApiClases.crearUnaSolaRuta();            Environment.Exit(0);
+
+
+        //    ApiClases.Validacion(); Environment.Exit(0);
+
+            if (args.Length==0)
+            { 
+                ApiClases.generaRutas();
+                Environment.Exit(0);
+            }
+
+            if (args.Length > 0)                {                    
                     foreach (Object argumento in args)
                     {
                         string argument = argumento.ToString();
@@ -20,23 +36,26 @@ namespace RepsolTT
                         {
                             case "GENERAR_NUEVAS_RUTAS":
                                 ApiClases.generaRutas();
-                                break;
+                            Environment.Exit(0);
+                            break;
                             case "GENERAR_FICHERO":
-                                ApiClases.crearRutas();
-                                break;
+                                ApiClases.crearUnaSolaRuta();
+                            Environment.Exit(0);
+                            break;
                             case "ACTUALIZAR_FLAG":
                                 ApiClases.Validacion();
-                                break;
+                            Environment.Exit(0);
+                            break;
                             case "INFO_RUTA":
                                 ApiClases.InfoRuta();
+                            Environment.Exit(0);
+                            Console.ReadKey();
                                 break;
                         }
                     }
                 } 
 
-
                 string[] MiMenu = new string[] { "GENERAR_NUEVAS_RUTAS", "GENERAR_FICHERO", "ACTUALIZAR_FLAG", "INFO_RUTA","SALIR" };
-
                 string devMenu = Utils.Menu(MiMenu);
 
                 if (devMenu == "SALIR") Environment.Exit(0);
@@ -49,7 +68,7 @@ namespace RepsolTT
                         ApiClases.generaRutas();
                         break;
                     case "GENERAR_FICHERO":
-                        ApiClases.crearRutas();
+                        ApiClases.crearUnaSolaRuta();
                         break;
                     case "ACTUALIZAR_FLAG":
                         ApiClases.Validacion();
@@ -63,8 +82,7 @@ namespace RepsolTT
                 Console.ReadKey();
                 Environment.Exit(0);
              
-             
-
+            
             //if (token != "")
             //{
 

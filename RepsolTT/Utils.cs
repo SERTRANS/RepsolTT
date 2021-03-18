@@ -1,12 +1,16 @@
-﻿using Newtonsoft.Json;
+﻿
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
+using System.Net;
+using System.Net.Mail;
+using System.Reflection; 
 using System.Text.Json;
-using System.Threading.Tasks;
+ 
 
 namespace RepsolTT
 {
@@ -81,6 +85,33 @@ namespace RepsolTT
                 }
             }
         }
+
+
+        public static void WriteToFileTMP2(string Message)
+        {
+            string path = AppDomain.CurrentDomain.BaseDirectory + "\\Logs";
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            string projectName = Assembly.GetCallingAssembly().GetName().Name;
+            string filepath = AppDomain.CurrentDomain.BaseDirectory + "\\Logs\\Direcciones" + projectName + "_" + DateTime.Now.Date.ToShortDateString().Replace('/', '_') + ".txt";
+            if (!File.Exists(filepath))
+            {
+                // Create a file to write to.   
+                using (StreamWriter sw = File.CreateText(filepath))
+                {
+                    sw.WriteLine(Message);
+                }
+            }
+            else
+            {
+                using (StreamWriter sw = File.AppendText(filepath))
+                {
+                    sw.WriteLine(Message);
+                }
+            }
+        }
         public static string Menu(string[] MiMenu)
         {
             Console.TreatControlCAsInput = false;
@@ -126,13 +157,13 @@ namespace RepsolTT
 
         public static void GuardaEdi(string Message,string albaran,string departamento)
         {
-            string path = Models.clsUtils.GlobalVariables.RutaEDI;
+            string path = Models.clsUtils.GlobalVariables.RutaEDI + "\\" + departamento;
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
 
-            string filepath = path + "\\" + departamento +"_" + albaran +"_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".csv";
+            string filepath = path + "\\"  + albaran +"_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".csv";
             if (!File.Exists(filepath))
             {
                 // Create a file to write to.   
@@ -153,20 +184,25 @@ namespace RepsolTT
 
         public static DateTime FromUnixTime(  long unixTime)
         {
-
             DateTimeOffset dateTimeOffSet = DateTimeOffset.FromUnixTimeMilliseconds(unixTime);
             DateTime fecha = dateTimeOffSet.DateTime;
+            //fecha = fecha.AddHours(1);
 
-            return fecha;
+        
+      
+            TimeZoneInfo nzTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Romance Standard Time");
+            DateTime nzDateTime = TimeZoneInfo.ConvertTimeFromUtc(fecha, nzTimeZone);
 
-           
+
+            return nzDateTime; 
         }
 
-      
+   
         public static string DimeDepartamento(string codPostal, Int32 kg, string Pais)
         {
             if (Pais != "ES")
                 return "21";
+
 
             if ("43170825".Contains(codPostal.Substring(0, 2)) && kg < 17000 && Pais == "ES")            
                 return "4";
@@ -208,6 +244,33 @@ namespace RepsolTT
         {
             return source == null;
         }
+
+        public static void EnviarMailErrores(string asunto, string mensaje)
+        {
+
+
+            string[] direcs = ConfigurationManager.AppSettings.AllKeys
+                          .Where(key => key.StartsWith("mailProcesos"))
+                          .Select(key => ConfigurationManager.AppSettings[key])
+                          .ToArray();
+
+
+
+            ArrayList para = new ArrayList();
+            foreach (string i in direcs)
+            {
+                if (i != "")
+                    para.Add(i);
+            }
+
+
+            ComunesRedux.ClasesComunes.EnviarCorreoElectronicoV2("no-reply@sertrans.es", para, para, asunto, mensaje, null);
+
+
+        }
+    
+
+
 
     }
 }

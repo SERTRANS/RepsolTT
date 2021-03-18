@@ -14,7 +14,6 @@ namespace RepsolTT
     {
         public static string EncrptaPassword()
         {
-
             try
             {
                 string PaswwordAEncriptar = Models.clsUtils.GlobalVariables.Password;
@@ -23,7 +22,7 @@ namespace RepsolTT
                 var request = new RestRequest(Method.GET);
                 request.AddHeader("API-KEY", Models.clsUtils.GlobalVariables.API_KEY);
                 IRestResponse response = client.Execute(request);
-                Console.WriteLine(response.Content);
+//                Console.WriteLine(response.Content);
                 Models.clsUtils.retornoApi vRetApi = new Models.clsUtils.retornoApi();
                 vRetApi = JsonConvert.DeserializeObject<Models.clsUtils.retornoApi>(response.Content);
                 if (vRetApi.e_return.type == "S")
@@ -64,7 +63,7 @@ namespace RepsolTT
 
                     request.AddParameter("application/json", Body, ParameterType.RequestBody);
                     IRestResponse response = client.Execute(request);
-                    Console.WriteLine(response.Content);
+                    //Console.WriteLine(response.Content);
 
                     Models.clsUtils.retornoApi vRetApi = new Models.clsUtils.retornoApi();
                     vRetApi = JsonConvert.DeserializeObject<Models.clsUtils.retornoApi>(response.Content);
@@ -84,14 +83,11 @@ namespace RepsolTT
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
                 return "";
 
-            }
-
-
-
+            } 
 
         }
          
-        public static void crearRutas()
+        public static void crearUnaSolaRuta()
         {
             Console.WriteLine("");
             Console.WriteLine("");
@@ -109,12 +105,10 @@ namespace RepsolTT
                 foreach (string value in array)
                 {
                     listaAlbaranes.Add(value);
-
                 }
                     ApiClases.GeneraEdi(token, listaAlbaranes);
             }
             else
-
             {
                 Console.WriteLine(DateTime.Now.ToString() + ",ERROR CONSIGUIENDO TOKEN");
 
@@ -132,6 +126,7 @@ namespace RepsolTT
 
             if (token != "")
             {
+                Console.WriteLine(DateTime.Now.ToString(), " RECOGIENDO TOKEN:" + token);
                 List<string> listaAlbaranes = new List<string>();
                 listaAlbaranes = ApiClases.DameTodasRutas(token);
                 ApiClases.GeneraEdi(token, listaAlbaranes);
@@ -140,7 +135,7 @@ namespace RepsolTT
 
             {
                 Console.WriteLine(DateTime.Now.ToString() + ",ERROR CONSIGUIENDO TOKEN");
-
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR CONSIGUIENDO TOKEN","ERROR CONGUIENDO TOKEN");
             }
         }
 
@@ -155,25 +150,26 @@ namespace RepsolTT
                 request.AddHeader("fieldeas-token", token);
                 request.AddHeader("API-KEY", Models.clsUtils.GlobalVariables.API_KEY);
                 IRestResponse response = client.Execute(request);
-                Console.WriteLine(response.Content);
+           //     Console.WriteLine(response.Content);
                 vRetApi = new Models.clsUtils.DatosRuta();
                 if (response.Content.Contains("e_return"))
                 {
+
                     vRetApi.route_code = "NOEXISTE";
-               //     Utils.WriteToFile(DateTime.Now.ToString() + ";" + Albaran + ";" + response.Content);
+                    Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL DameDatosRutas", "No existe el albaran en la api");
+                    //     Utils.WriteToFile(DateTime.Now.ToString() + ";" + Albaran + ";" + response.Content);
+                         Utils.WriteToFile(DateTime.Now.ToString() + ";" + Albaran + ";" + response.Content);
                 }
                 else
                 {
                     vRetApi = JsonConvert.DeserializeObject<Models.clsUtils.DatosRuta>(response.Content);
                 }
-
-
                 return vRetApi;
-
             }
             catch (Exception ex)
             {
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL DameDatosRutas", ex.Message );
                 vRetApi.route_code = "";
             }
             return vRetApi;
@@ -182,8 +178,6 @@ namespace RepsolTT
         {
             try
             {
-
-
                 var client = new RestClient(Models.clsUtils.GlobalVariables.Api + "/route/assigns?routeCode=" + albaran);
                 client.Timeout = -1;
                 var request = new RestRequest(Method.PUT);
@@ -204,6 +198,7 @@ namespace RepsolTT
             catch (Exception ex)
             {
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL AsignaChoferMatricula", ex.Message);
                 return "";
 
             }
@@ -282,6 +277,7 @@ namespace RepsolTT
             catch (Exception ex)
             {
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL ValidarRutaBajada", ex.Message);
             }
 
 
@@ -291,8 +287,6 @@ namespace RepsolTT
         {
             try
             {
-
-
 
                 var client = new RestClient(Models.clsUtils.GlobalVariables.Api + "/entities/RUTAS/query?offset=0&limit=1150");
                 client.Timeout = -1;
@@ -319,7 +313,7 @@ namespace RepsolTT
 
                 request.AddParameter("application/json", Body, ParameterType.RequestBody);
                 IRestResponse response = client.Execute(request);
-                Console.WriteLine(response.Content);
+                //Console.WriteLine(response.Content);
 
                 string json = response.Content;
                 json = json.Replace("{\"table\":\"RUTAS\",\"data\":[[", ""); json = json.Replace(",", "," + Environment.NewLine); json = json.Replace("]]}", ","); json = json.Replace("}", ""); json = json.Replace("{", "");
@@ -339,12 +333,11 @@ namespace RepsolTT
                 {
 
 
-                    //if (array[i].Contains("ID_RUTA"))
-                    //{
-                    //    i++;
-                    //    idruta = Limpia(array[i]);
-
-                    //}
+                    if (array[i].Contains("ID_RUTA"))
+                    {
+                        i++;
+                        idruta = Limpia(array[i]);
+                    }
 
 
 
@@ -353,19 +346,16 @@ namespace RepsolTT
                         i++;
                         listaAlbaranes.Add(Limpia(array[i]));
                         ruta = Limpia(array[i]);
-
                     }
 
 
 
-                    //if (array[i].Contains("FH_INICIO_PLANIFICADA_CERCANA"))
-                    //{
-                    //    i++;
-                    //    DateTime f = Convert.ToDateTime(Limpia(array[i]));
-
-                    //    Utils.WriteToFileTMP(idruta + "," + ruta + "," + f.ToString());
-
-                    //}
+                    if (array[i].Contains("FH_INICIO_PLANIFICADA_CERCANA"))
+                    {
+                        i++;
+                        DateTime f = Convert.ToDateTime(Limpia(array[i]));
+                        Utils.WriteToFileTMP(idruta + "," + ruta + "," + f.ToString());
+                    }
 
                 }
 
@@ -374,7 +364,8 @@ namespace RepsolTT
             }
             catch (Exception ex)
             {
-                Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                //Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + " ERROR Repsol", ex.Message);
                 return null;
 
             }
@@ -428,8 +419,8 @@ namespace RepsolTT
             catch (Exception ex)
             {
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL NumeroCargasDescargas", ex.Message);
                 return null;
-
             }
 
         }
@@ -440,10 +431,10 @@ namespace RepsolTT
             string ficheroCadena=string.Empty;
             try
             {
-
                 foreach (string item in listaAlbaranes)
                 {
                     Models.clsUtils.ProtocoloEdi edi = new Models.clsUtils.ProtocoloEdi();
+
                     edi = infoAlbaranes(token, item);
                     if (edi != null)
                     {
@@ -456,8 +447,7 @@ namespace RepsolTT
 
                                 ficheroCadena = unoAuno(token,edi);
                                 if (ficheroCadena != "")
-                                    Utils.WriteToFile(DateTime.Now.ToString() + ";" + ficheroCadena);
-                                    
+                                    Utils.WriteToFile(DateTime.Now.ToString() + ";" + ficheroCadena);                                    
 
                             }
                             //Dos cargas un destino
@@ -472,23 +462,19 @@ namespace RepsolTT
                             }
                             else
                             {
-
                                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + "Mas cargas que las previstas" + ficheroCadena);
+                                Utils.EnviarMailErrores(DateTime.Now.ToString() + " ERROR REPSOL", "Mas cargas que las previstas " + item);
                             }
                         }
 
                     }
-
                 }
             }
             catch (Exception ex)
             {
-
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
-
-
-            }
-             
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + " ERROR REPSOL GENERA EDI", ex.Message);
+            }             
          
     }
 
@@ -519,7 +505,8 @@ namespace RepsolTT
                          edi.BaremoBultos + ";" +
                          "0" + ";" +
                          "" + ";" +
-                         "" + ";"
+                         "" + ";" +
+                         edi.OrderId
                         ;
 
                 return linea;
@@ -528,11 +515,106 @@ namespace RepsolTT
             catch (Exception ex)
             {
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL GeneraEdiCadena", ex.Message);
                 return "";
 
             }
 
         }
+
+        public static string generaEdiCadenaLocal(Models.clsUtils.ProtocoloEdiDatos edi,int lineaEntrega,string tipus,int Kg)
+        {
+
+            try
+            {
+                int kils=0;
+                int lineaEntrega2 = lineaEntrega + 1;
+
+                if (lineaEntrega2 == 2 && tipus=="unoAuno")
+                        lineaEntrega2 = 999;
+
+                if (lineaEntrega2 == 4 )
+                {
+                
+                    lineaEntrega2 = 999;
+                    
+                    if (Kg>0)
+                    {
+                        kils = Kg;
+                    }
+                    else
+                    {
+                        kils = Convert.ToInt32  (edi.BaremoPesoBruto);
+                    }
+                    
+                    
+                }
+                else
+                {
+                    kils = Convert.ToInt32(edi.BaremoPesoBruto.Replace(".0",""));
+                }
+
+
+                string linea1;
+
+
+                linea1 = edi.AlbaranOrdenante.Trim() + ";" +
+                         "2" + ";" +
+                         lineaEntrega.ToString() + ";" +
+                         edi.FechaSalidaExpedicion + ";" +
+                         "00:00" + ";" +
+                         edi.NombreRemitente.Trim() + ";" +
+                         edi.DomicilioRemitente.Trim() + ";" +
+                         edi.PoblacionRemitente.Trim() + ";" +
+                         edi.CodigoPostalRemitente.Trim() + ";" +
+                         edi.CodigoPaisRemitente.Trim() + ";" +
+                         edi.BaremoPalets + ";" +
+                         edi.BaremoPesoBruto + ";" +
+                         edi.BaremoVolumen + ";" +
+                         edi.BaremoBultos + ";" +
+                         edi.OrderId
+                         ;
+
+                         
+                    string linea2;
+                linea2= edi.AlbaranOrdenante.Trim() + ";" +
+                         "0" + ";" +
+                         lineaEntrega2.ToString() + ";" +
+                         edi.FechaEntregaExpedicion + ";" +
+                         "00:00" + ";" +
+                         edi.NombreDestinatario.Trim() + ";" +
+                         edi.DomicilioDestinatario.Trim() + ";" +
+                         edi.PoblacionDestinatario.Trim() + ";" +
+                         edi.CodigoPostalDestinatario.Trim() + ";" +
+                         edi.CodigoPaisDestinatario.Trim() + ";" +
+                         edi.BaremoPalets + ";" +
+                         kils.ToString() + ";" +
+                         edi.BaremoVolumen + ";" +
+                         edi.BaremoBultos + ";" +
+                         edi.OrderId
+                        ;
+                string linea3;
+
+                if (lineaEntrega == 1 && tipus=="dosAuno")
+                    linea3 = linea1;
+                else
+
+                    linea3 =linea1 + Environment.NewLine + linea2;
+
+                return linea3;
+
+            }
+            catch (Exception ex)
+            {
+                Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL GeneraEdiCadena", ex.Message);
+                return "";
+
+            }
+
+        }
+
+
 
 
         public static void generaEdi(Models.clsUtils.ProtocoloEdiDatos edi)
@@ -586,7 +668,9 @@ namespace RepsolTT
                 Models.clsUtils.ProtocoloEdiDatos Descarga = new Models.clsUtils.ProtocoloEdiDatos();
                 Models.clsUtils.ProtocoloEdiDatos Tot = new Models.clsUtils.ProtocoloEdiDatos();
 
+                
                 string ficheroCadena = "";
+                string ficheroCadenaLLocal = "";
 
 
                 if (edi.ProtocoloEdiDatosLista[0].CargaDescarga == "D")
@@ -611,7 +695,8 @@ namespace RepsolTT
                 }
 
 
-                Tot.AlbaranOrdenante = edi.AlbaranOrdenante.Trim();
+                //Tot.AlbaranOrdenante = edi.AlbaranOrdenante.Trim();
+                Tot.AlbaranOrdenante = carga1.AlbaranOrdenante + "-" + carga2.AlbaranOrdenante;
                 Tot.FechaSalidaExpedicion = carga1.FechaSalidaExpedicion;
                 Tot.HoraAcordadaSalida = carga1.HoraAcordadaSalida;
                 Tot.FechaEntregaExpedicion = Descarga.FechaEntregaExpedicion;
@@ -630,16 +715,17 @@ namespace RepsolTT
                 Tot.CodigoPaisDestinatario = Descarga.CodigoPaisDestinatario;
 
                 Tot.BaremoPalets = carga1.BaremoPalets;
-                Tot.BaremoPesoBruto = carga1.BaremoPesoBruto;
+                Tot.BaremoPesoBruto = carga1.BaremoPesoBruto.Replace(".0", "");
                 Tot.BaremoVolumen = carga1.BaremoVolumen;
                 Tot.BaremoBultos = carga1.BaremoBultos;
+                Tot.OrderId = carga1.OrderId;
 
 
                 ficheroCadena = generaEdiCadena(Tot);
+                ficheroCadenaLLocal = generaEdiCadenaLocal(Tot,1, "dosAuno",0);
 
 
-
-                Tot.AlbaranOrdenante = edi.AlbaranOrdenante.Trim();
+                Tot.AlbaranOrdenante = carga1.AlbaranOrdenante + "-" + carga2.AlbaranOrdenante;
                 Tot.FechaSalidaExpedicion = carga2.FechaSalidaExpedicion;
                 Tot.HoraAcordadaSalida = carga2.HoraAcordadaSalida;
                 Tot.FechaEntregaExpedicion = Descarga.FechaEntregaExpedicion;
@@ -658,28 +744,55 @@ namespace RepsolTT
                 Tot.CodigoPaisDestinatario = Descarga.CodigoPaisDestinatario;
 
                 Tot.BaremoPalets = carga2.BaremoPalets;
-                Tot.BaremoPesoBruto = carga2.BaremoPesoBruto;
+                Tot.BaremoPesoBruto = carga2.BaremoPesoBruto.Replace(".0", "");
                 Tot.BaremoVolumen = carga2.BaremoVolumen;
                 Tot.BaremoBultos = carga2.BaremoBultos;
+                Tot.OrderId = carga2.OrderId;
+
+                Tot.idRuta = carga1.idRuta;
+
+                Int32 kgCarga1;
+                Int32 kgCarga2;
+
+                if (Utils.IsNumeric(carga1.BaremoPesoBruto.Replace(".0", "")))                
+                    kgCarga1 = Convert.ToInt32(carga1.BaremoPesoBruto.Replace(".0", ""));
+                else
+                        kgCarga1 = 0;
+
+                if (Utils.IsNumeric(carga2.BaremoPesoBruto.Replace(".0", "")))
+                    kgCarga2 = Convert.ToInt32(carga2.BaremoPesoBruto.Replace(".0", ""));
+                else
+                    kgCarga2 = 0;
+
 
                 Int32 kg;
-                Tot.BaremoPesoBruto = Tot.BaremoPesoBruto.Replace(".0", "");
+                kg = kgCarga1 + kgCarga2;
 
-                if (Utils.IsNumeric(Tot.BaremoPesoBruto))
-                    kg = Convert.ToInt32(Tot.BaremoPesoBruto);
-                else
-                    kg = 0;
-
-
+                
                 Tot.Departamento = Utils.DimeDepartamento(Descarga.CodigoPostalDestinatario, kg, Descarga.CodigoPaisDestinatario);
+                if (Tot.Departamento == "4")
+                    Utils.EnviarMailErrores("REPSOL  Pedido paqueteria con mas de una carga", Tot.AlbaranOrdenante);
 
 
+                if (Tot.Departamento == "8")
+                {
+                    ficheroCadenaLLocal = ficheroCadenaLLocal + Environment.NewLine + generaEdiCadenaLocal(Tot,3, "dosAuno", kg);
 
-                ficheroCadena = ficheroCadena + Environment.NewLine + generaEdiCadena(Tot);
+                    Utils.GuardaEdi(ficheroCadenaLLocal, Tot.AlbaranOrdenante, Tot.Departamento);
+                }
+                else
+                {
+                    ficheroCadena = ficheroCadena + Environment.NewLine + generaEdiCadena(Tot);
 
-                Utils.GuardaEdi(ficheroCadena, Tot.AlbaranOrdenante, Tot.Departamento);
+                    Utils.GuardaEdi(ficheroCadena, Tot.AlbaranOrdenante, Tot.Departamento);
+                }
 
-           //     Validar(token, Tot.idRuta.ToString());
+
+                Utils.WriteToFileTMP2(Tot.NombreRemitente + ";" + Tot.DomicilioRemitente + ";" + Tot.PoblacionRemitente + ";" + Tot.CodigoPostalRemitente + ";" + Tot.CodigoPaisRemitente);
+                Utils.WriteToFileTMP2(Tot.NombreDestinatario + ";" + Tot.DomicilioDestinatario + ";" + Tot.PoblacionDestinatario + ";" + Tot.CodigoPostalDestinatario + ";" + Tot.CodigoPaisDestinatario);
+
+
+                     Validar(token, Tot.idRuta.ToString());
 
 
                 return ficheroCadena;
@@ -687,6 +800,7 @@ namespace RepsolTT
             catch (Exception ex)
             {
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL dosAUno", ex.Message);
                 return "";
 
             }
@@ -718,9 +832,11 @@ namespace RepsolTT
 
                 Tot.AlbaranOrdenante = edi.AlbaranOrdenante.Trim();
                 Tot.FechaSalidaExpedicion = carga.FechaSalidaExpedicion;
-                Tot.HoraAcordadaSalida = carga.HoraAcordadaSalida;
+                //Tot.HoraAcordadaSalida = carga.HoraAcordadaSalida;
+                Tot.HoraAcordadaSalida = "00:00";
                 Tot.FechaEntregaExpedicion = Descarga.FechaEntregaExpedicion;
-                Tot.HoraAcordadaEntrega = Descarga.HoraAcordadaEntrega;
+                //Tot.HoraAcordadaEntrega = Descarga.HoraAcordadaEntrega;
+                Tot.HoraAcordadaEntrega = "00:00";
 
                 Tot.NombreRemitente = carga.NombreRemitente;
                 Tot.DomicilioRemitente = carga.DomicilioRemitente;
@@ -740,6 +856,9 @@ namespace RepsolTT
                 Tot.BaremoPesoBruto = Utils.IsNull(carga.BaremoPesoBruto) ? "0" : carga.BaremoPesoBruto;
                 Tot.BaremoVolumen = Utils.IsNull(carga.BaremoVolumen) ? "0" : carga.BaremoVolumen;
                 Tot.BaremoBultos = Utils.IsNull(carga.BaremoBultos) ? "0" : carga.BaremoBultos;
+                Tot.OrderId = carga.OrderId;
+                
+                Tot.idRuta = carga.idRuta;
 
                 Int32 kg;
                 carga.BaremoPesoBruto = carga.BaremoPesoBruto.Replace(".0", "");
@@ -752,16 +871,28 @@ namespace RepsolTT
                 Tot.Departamento = Utils.DimeDepartamento(Descarga.CodigoPostalDestinatario, kg, Descarga.CodigoPaisDestinatario);
 
                 string ficheroCadena;
-                ficheroCadena = generaEdiCadena(Tot);   
+                if (Tot.Departamento=="8")
+                {                
+                    ficheroCadena = generaEdiCadenaLocal(Tot,1,"unoAuno",0);
+                }
+                else
+                { 
+                    ficheroCadena = generaEdiCadena(Tot);
+                }
+
+
                 Utils.GuardaEdi(ficheroCadena, Tot.AlbaranOrdenante, Tot.Departamento);
 
-            //    Validar(token, Tot.idRuta.ToString());
+                    Validar(token, Tot.idRuta.ToString());
 
+                Utils.WriteToFileTMP2(Tot.NombreRemitente + ";" + Tot.DomicilioRemitente + ";" + Tot.PoblacionRemitente + ";" + Tot.CodigoPostalRemitente + ";" + Tot.CodigoPaisRemitente);
+                Utils.WriteToFileTMP2(Tot.NombreDestinatario + ";" + Tot.DomicilioDestinatario + ";" + Tot.PoblacionDestinatario + ";" + Tot.CodigoPostalDestinatario + ";" + Tot.CodigoPaisDestinatario);
                 return ficheroCadena;
             }
             catch (Exception ex)
             {
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL unoAuno", ex.Message);
                 return "";
 
             }
@@ -814,12 +945,18 @@ namespace RepsolTT
 
 
                             DateTime vfecha = Utils.FromUnixTime(Convert.ToInt64(para.faraway_planned_timestamp));
+                            
+
+                            
 
                             ProtocoloEdiDatos.FechaSalidaExpedicion = vfecha.ToString("dd/MM/yyyy");
                             ProtocoloEdiDatos.HoraAcordadaSalida = vfecha.ToString("hh:mm");
 
                             ProtocoloEdiDatos.CargaDescarga = "C";
-                            ProtocoloEdiDatos.AlbaranOrdenante = vRetApi.route_code;
+
+                            Int32 al = Convert.ToInt32(para.operations[0].related_data[0].row[0].value.ToString());
+                            ProtocoloEdiDatos.AlbaranOrdenante = al.ToString();
+                            //ProtocoloEdiDatos.AlbaranOrdenante = vRetApi.route_code;
                             ProtocoloEdiDatos.idRuta = vRetApi.id;
                             ProtocoloEdiDatos.NombreRemitente = para.name;
                             ProtocoloEdiDatos.DomicilioRemitente = para.address;
@@ -830,6 +967,9 @@ namespace RepsolTT
                             ProtocoloEdiDatos.BaremoPesoBruto = para.operations[0].expected_weight;
                             ProtocoloEdiDatos.BaremoVolumen = para.operations[0].expected_volume;
                             ProtocoloEdiDatos.BaremoBultos = para.operations[0].expected_units;
+                            ProtocoloEdiDatos.OrderId= para.operations[0].order_id;
+
+
                             ProtocoloEdi.ProtocoloEdiDatosLista.Add(ProtocoloEdiDatos);
                         }
 
@@ -855,6 +995,7 @@ namespace RepsolTT
                             ProtocoloEdiDatos.BaremoPesoBruto = para.operations[0].expected_weight;
                             ProtocoloEdiDatos.BaremoVolumen = para.operations[0].expected_volume;
                             ProtocoloEdiDatos.BaremoBultos = para.operations[0].expected_units;
+                            ProtocoloEdiDatos.OrderId = para.operations[0].order_id;
 
                             ProtocoloEdi.ProtocoloEdiDatosLista.Add(ProtocoloEdiDatos);
 
@@ -868,11 +1009,284 @@ namespace RepsolTT
             catch (Exception ex)
             {
                 Utils.WriteToFileFallo(DateTime.Now.ToString() + ";" + ex.Message);
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ",ERROR REPSOL infoAlbaranes", ex.Message);
                 return null;
-
             }
 
         }
+
+
+        public static void nou()
+        {
+            string token = DameToken();
+
+            Console.WriteLine(token);
+
+            Models.clsUtils.DatosRuta todo = new Models.clsUtils.DatosRuta();
+            todo  = DameDatosRuta(token, "34108");
+            List<Models.clsUtils.Stop> paradas = new List<Models.clsUtils.Stop>();
+            paradas = todo.stops;
+
+            List<Models.clsUtils.Stop> tipoC = todo.stops.Where(r => r.stop_type == "C").ToList();
+            List<Models.clsUtils.Stop> tipoD = todo.stops.Where(r => r.stop_type == "D").ToList();
+
+
+            Int32 Peso=PesoCargas(tipoC);
+            List<string> vPaisDestinoYCodPostal = new List<string>();
+            vPaisDestinoYCodPostal=PaisDestinoYCodPostal(tipoD);
+            string TipoDepartamento = string.Empty;
+
+            TipoDepartamento=Utils.DimeDepartamento(vPaisDestinoYCodPostal[1], Peso, vPaisDestinoYCodPostal[0]);
+
+            if (TipoDepartamento.Trim()=="8")
+            {
+                string cargas=GeneraLocalCargas(tipoC);
+                string desCargas = GeneraLocalDesCargas(tipoD,tipoD.Count);
+            }
+            else
+            {
+                GeneraResto(tipoC, tipoD);
+                
+            }
+        }
+
+        public static void GeneraResto(List<Models.clsUtils.Stop>  tipoC, List<Models.clsUtils.Stop> tipoD)
+        {
+
+            // Cargamos en una lista Cargas y Descargas en listaDatos
+            List<Models.clsUtils.ProtocoloEdiDatos> listaDatos = new List<Models.clsUtils.ProtocoloEdiDatos>();
+            try
+            {
+                string orderId = "";
+                
+                foreach (Models.clsUtils.Stop item in tipoC)
+                {
+                    Models.clsUtils.ProtocoloEdiDatos datos = new Models.clsUtils.ProtocoloEdiDatos();
+
+                    int pesoTotal = 0;
+                    string albaran = Convert.ToInt32(item.operations[0].related_data[0].row[0].value.ToString()).ToString();
+                    datos.AlbaranOrdenante = albaran;
+                    
+                    DateTime FechaCarga = Utils.FromUnixTime(Convert.ToInt64(item.faraway_planned_timestamp));
+                    datos.FechaSalidaExpedicion = FechaCarga.ToString();
+                    string HoraCarga = "00:00";
+                    datos.HoraAcordadaSalida = HoraCarga;
+                    string Nombre = item.name.ToUpper();
+                    datos.NombreRemitente = Nombre;
+                    string Domicilio = item.address.ToUpper();
+                    datos.DomicilioRemitente = Domicilio;
+                    string Poblacion = item.city.ToUpper();
+                    datos.PoblacionRemitente = Poblacion;
+                    string CodigoPostal = item.postal_code.ToUpper();
+                    datos.CodigoPaisRemitente = CodigoPostal;
+                    string CodigoPais = item.country.ToUpper();
+                    datos.CodigoPaisRemitente = CodigoPais;
+                    Models.clsUtils.Operation operacion = new Models.clsUtils.Operation();
+                    List<Models.clsUtils.Operation> loperaciones = new List<Models.clsUtils.Operation>();
+                    loperaciones = item.operations;
+                    foreach (Models.clsUtils.Operation opitem in loperaciones)
+                    {
+                        int peso = 0;
+                        peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
+                        pesoTotal = peso + peso;
+                        orderId = opitem.order_id;
+                        datos.BaremoPesoBruto = pesoTotal.ToString();
+                        datos.BaremoVolumen = "0";
+                        datos.BaremoPalets = "0";
+                        datos.BaremoMetrosLineales = "0";
+                        datos.OrderId = orderId;
+                        listaDatos.Add(datos);
+                    }
+        
+                }
+
+
+
+                foreach (Models.clsUtils.Stop item in tipoD)
+                {
+                    Models.clsUtils.ProtocoloEdiDatos datos = new Models.clsUtils.ProtocoloEdiDatos();
+
+                    int pesoTotal = 0;
+                    string albaran = Convert.ToInt32(item.operations[0].related_data[0].row[0].value.ToString()).ToString();
+                    datos.AlbaranOrdenante = albaran;
+
+                    DateTime FechaCarga = Utils.FromUnixTime(Convert.ToInt64(item.faraway_planned_timestamp));
+                    datos.FechaSalidaExpedicion = FechaCarga.ToString();
+                    string HoraCarga = "00:00";
+                    datos.HoraAcordadaSalida = HoraCarga;
+                    string Nombre = item.name.ToUpper();
+                    datos.NombreDestinatario = Nombre;
+                    string Domicilio = item.address.ToUpper();
+                    datos.DomicilioDestinatario = Domicilio;
+                    string Poblacion = item.city.ToUpper();
+                    datos.PoblacionDestinatario = Poblacion;
+                    string CodigoPostal = item.postal_code.ToUpper();
+                    datos.CodigoPaisRemitente = CodigoPostal;
+                    string CodigoPais = item.country.ToUpper();
+                    datos.CodigoPaisRemitente = CodigoPais;
+                    Models.clsUtils.Operation operacion = new Models.clsUtils.Operation();
+                    List<Models.clsUtils.Operation> loperaciones = new List<Models.clsUtils.Operation>();
+                    loperaciones = item.operations;
+                    foreach (Models.clsUtils.Operation opitem in loperaciones)
+                    {
+                        int peso = 0;
+                        peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
+                        pesoTotal = peso + peso;
+                        orderId = opitem.order_id;
+                        datos.BaremoPesoBruto = pesoTotal.ToString();
+                        datos.BaremoVolumen = "0";
+                        datos.BaremoPalets = "0";
+                        datos.BaremoMetrosLineales = "0";
+                        datos.OrderId = orderId;
+                        listaDatos.Add(datos);
+                    }
+       
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ";GenerarResto ", ex.Message);
+                
+            }
+
+        }
+
+
+        public static string GeneraLocalDesCargas(List<Models.clsUtils.Stop> tipoD,int nLineas)
+        {
+            try
+            {
+                int orden = 0;
+                string linea = "";
+                string orderId = "";
+                foreach (Models.clsUtils.Stop item in tipoD)
+                {
+                    int pesoTotal = 0;
+                    string albaran = Convert.ToInt32(item.operations[0].related_data[0].row[0].value.ToString()).ToString();
+                    string tipo = "0";
+                    orden = +1;
+                    if (orden == tipoD.Count) orden = 999;
+                    DateTime FechaDesCarga = Utils.FromUnixTime(Convert.ToInt64(item.faraway_planned_timestamp));
+                    string HoraDesCarga = "00:00";
+                    string Nombre = item.name.ToUpper();
+                    string Domicilio = item.address.ToUpper();
+                    string Poblacion = item.city.ToUpper();
+                    string CodigoPostal = item.postal_code.ToUpper();
+                    string CodigoPais = item.country.ToUpper();
+                    Models.clsUtils.Operation operacion = new Models.clsUtils.Operation();
+                    List<Models.clsUtils.Operation> loperaciones = new List<Models.clsUtils.Operation>();
+                    loperaciones = item.operations;
+                    foreach (Models.clsUtils.Operation opitem in loperaciones)
+                    {
+                        int peso = 0;
+                        peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
+                        pesoTotal = peso + peso;
+                        orderId = opitem.order_id;
+
+                    }
+                    linea = linea + albaran + ";" + tipo + ";" + orden + ";" + FechaDesCarga.ToString("dd/MM/yyyy") + ";" + HoraDesCarga + ";" + Nombre + ";" + Domicilio + ";" + Poblacion + ";" + CodigoPostal + ";" + CodigoPais + ";" + pesoTotal.ToString() + ";" + orderId + Environment.NewLine;
+                }
+                return linea;
+            }
+            catch (Exception ex)
+            {
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ";GenerarLocalCargas ", ex.Message);
+                return "";
+            }
+        }
+         
+
+        public static string  GeneraLocalCargas(List<Models.clsUtils.Stop> tipoC)
+        {
+            try
+            {
+                int orden = 0;
+                string linea = "";
+                string orderId = "";
+                foreach (Models.clsUtils.Stop item in tipoC)
+                {
+                    int pesoTotal = 0;
+                    string albaran = Convert.ToInt32(item.operations[0].related_data[0].row[0].value.ToString()).ToString();
+                    string tipo = "2";
+                    orden  +=1;
+                    //if (orden == tipoC.Count) orden = 999;
+                    DateTime FechaCarga = Utils.FromUnixTime(Convert.ToInt64(item.faraway_planned_timestamp));
+                    string HoraCarga = "00:00";
+                    string Nombre = item.name.ToUpper();
+                    string Domicilio = item.address.ToUpper();
+                    string Poblacion = item.city.ToUpper();
+                    string CodigoPostal = item.postal_code.ToUpper();
+                    string CodigoPais = item.country.ToUpper();
+                    Models.clsUtils.Operation operacion = new Models.clsUtils.Operation();
+                    List<Models.clsUtils.Operation> loperaciones = new List<Models.clsUtils.Operation>();
+                    loperaciones = item.operations;
+                    foreach (Models.clsUtils.Operation opitem in loperaciones)
+                    {
+                        int peso = 0;
+                        peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
+                        pesoTotal = peso + peso;
+                        orderId = opitem.order_id;
+
+                    }
+                    linea = linea + albaran + ";" + tipo + ";" + orden + ";" + FechaCarga.ToString("dd/MM/yyyy") + ";" + HoraCarga + ";" + Nombre + ";" + Domicilio + ";" + Poblacion + ";" + CodigoPostal + ";" + CodigoPais + ";" + pesoTotal.ToString() + ";" + orderId + Environment.NewLine;
+                }
+                return linea;
+            }
+            catch (Exception ex)
+            {
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + ";GenerarLocalCargas " , ex.Message);
+                return "";
+            }
+        }
+
+        public static Int32 PesoCargas(List<Models.clsUtils.Stop> tipoC)
+        {
+            try
+            {
+                List<Models.clsUtils.Operation> op = new List<Models.clsUtils.Operation>();
+                Int32 totPeso = 0;
+                Int32 pesoOP = 0;
+                foreach (Models.clsUtils.Stop item in tipoC)
+                {
+                    op = item.operations;
+                    Models.clsUtils.Operation peso = new Models.clsUtils.Operation();
+                    foreach (Models.clsUtils.Operation p in op)
+                    {
+                        pesoOP = Convert.ToInt32(p.expected_weight.Replace(".0", ""));
+                        totPeso = totPeso + pesoOP;
+                    }
+                }
+                return totPeso;
+            }
+            catch(Exception e)
+            {
+                return 0;
+            }
+        }
+
+        public static List<string>  PaisDestinoYCodPostal(List<Models.clsUtils.Stop> tipoD)
+        {
+            try
+            {
+                List<string> vret = new List<string>();
+                List<Models.clsUtils.Operation> op = new List<Models.clsUtils.Operation>();
+                string pais=string.Empty;
+                foreach (Models.clsUtils.Stop item in tipoD)
+                {
+                    vret.Add(item.country);
+                    vret.Add(item.postal_code);
+                }
+                return vret;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
 
         public static string Limpia(string texto)
         {

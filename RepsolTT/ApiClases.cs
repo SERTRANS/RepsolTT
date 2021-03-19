@@ -1010,7 +1010,8 @@ namespace RepsolTT
 
             string token;
             token = ApiClases.DameToken();
-
+            string mensaje = "";
+            string mensajeTot = "";
             if (token != "")
             {
                 Console.WriteLine(DateTime.Now.ToString() +  " RECOGIENDO TOKEN:" + token);
@@ -1020,11 +1021,15 @@ namespace RepsolTT
                 int cont = 0;
                 foreach (string item in listaAlbaranes)
                 {
-                    nou(token, item);
+                    buscarRutas (token, item);
                     cont += 1;
-                    Console.WriteLine(DateTime.Now.ToString() + " Generando("+ cont.ToString()  + "/"+ listaAlbaranes.Count.ToString() +"):" + item);
-
+                    mensaje = DateTime.Now.ToString() + " Generando(" + cont.ToString() + "/" + listaAlbaranes.Count.ToString() + "):" + item + " DEPARTAMENTO:" + Models.clsUtils.GlobalVariables.Departamento + Environment.NewLine;
+                    mensajeTot = mensajeTot + mensaje;
+                    Console.WriteLine(mensaje);
                 }
+
+              if (cont>0)   Utils.EnviarMailErrores(DateTime.Now.ToString() + "REPSOL GENERADOS", mensajeTot);
+               
             }
             else
             {
@@ -1050,7 +1055,7 @@ namespace RepsolTT
                 string[] array = albaran.Split(',');
                 foreach (string value in array)
                 {                    
-                    nou(token, value);
+                    buscarRutas(token, value);
                 }               
                 
             }
@@ -1064,7 +1069,7 @@ namespace RepsolTT
 
 
 
-        public static void nou(string token,string Albaran)
+        public static void buscarRutas(string token,string Albaran)
         {
             //string token = DameToken();
 
@@ -1086,6 +1091,8 @@ namespace RepsolTT
 
             TipoDepartamento=Utils.DimeDepartamento(vPaisDestinoYCodPostal[1], Peso, vPaisDestinoYCodPostal[0]);
 
+            Models.clsUtils.GlobalVariables.Departamento = TipoDepartamento;
+
             if (TipoDepartamento.Trim()=="8")
             {
                 string cargas=GeneraLocalCargas(tipoC);
@@ -1096,10 +1103,31 @@ namespace RepsolTT
             }
             else
             {
+                string ModoEnvio=DameModoEnvio(todo);
+
                 List<Models.clsUtils.ProtocoloEdiDatos> listaDatos = new List<Models.clsUtils.ProtocoloEdiDatos>();
-                listaDatos= GeneraResto(tipoC, tipoD);
+                listaDatos= GeneraResto(tipoC, tipoD, ModoEnvio);
                 EmparejarCargaDescarga(token,listaDatos, TipoDepartamento);
             }
+        }
+
+        public static string DameModoEnvio(Models.clsUtils.DatosRuta todo)
+        {
+            Models.clsUtils.Row IdModoEnvio = todo.related_data[0].row.Where(r => r.key == "ID_MODO_ENVIO").First();
+            string vRet=string.Empty;
+            switch (IdModoEnvio.value.ToString())
+            {
+                case "CT":
+                    vRet="10";
+                    break;
+                case "CX":
+                    vRet = "144";
+                    break;
+                default:
+                    vRet = "20";
+                    break;
+            }
+            return vRet;
         }
 
         public static void EmparejarCargaDescarga(string token ,List<Models.clsUtils.ProtocoloEdiDatos> listaDatos,string TipoDepartamento)
@@ -1110,8 +1138,8 @@ namespace RepsolTT
             foreach (string numAlbaranm in listaAlbaranes)            {
 
                 List<Models.clsUtils.ProtocoloEdiDatos> filtrat = listaDatos.Where(l => l.AlbaranOrdenante == numAlbaranm).ToList();
-                string fic= RelacionaCargaDescarga(token,filtrat);                
 
+                string fic= RelacionaCargaDescarga(token,filtrat);                
                 string[] array = fic.Split(';');
 
                 Utils.GuardaEdi(fic, array[0], TipoDepartamento);
@@ -1163,7 +1191,9 @@ namespace RepsolTT
                     filtratDesCarga[0].BaremoMetrosLineales + ";" +
                     "" + ";" +
                     "" + ";" +
-                    filtratDesCarga[0].OrderId;
+                    filtratDesCarga[0].OrderId + ";" +
+                    filtratDesCarga[0].IdModoEnvio
+                    ;
 
             Validar(token, filtratDesCarga[0].idRuta.ToString());
 
@@ -1172,7 +1202,7 @@ namespace RepsolTT
         }
 
 
-        public static List<Models.clsUtils.ProtocoloEdiDatos> GeneraResto(List<Models.clsUtils.Stop>  tipoC, List<Models.clsUtils.Stop> tipoD)
+        public static List<Models.clsUtils.ProtocoloEdiDatos> GeneraResto(List<Models.clsUtils.Stop>  tipoC, List<Models.clsUtils.Stop> tipoD,string IdModoEnvio)
         {
 
             // Cargamos en una lista Cargas y Descargas en listaDatos
@@ -1219,6 +1249,7 @@ namespace RepsolTT
                         datos.BaremoBultos = "0";
                         datos.BaremoMetrosLineales = "0";
                         datos.OrderId = orderId;
+                        datos.IdModoEnvio = IdModoEnvio;
                         listaDatos.Add(datos);
                     }
         
@@ -1254,9 +1285,6 @@ namespace RepsolTT
 
                         int peso = 0;
                         peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
-
-                        
-
                         orderId = opitem.order_id;
                         datos.OrderId = orderId;
                         datos.BaremoPesoBruto = peso.ToString();
@@ -1265,7 +1293,8 @@ namespace RepsolTT
                         datos.BaremoVolumen = "0";
                         datos.BaremoBultos = "0";
                         datos.BaremoMetrosLineales = "0";
-                        
+                        datos.IdModoEnvio = IdModoEnvio;
+
 
 
                         listaDatos.Add(datos);

@@ -12,23 +12,18 @@ namespace RepsolTT
             Utils.CargaVariables();
 
 
-           //ApiClases.ConsigueAlbaranes();Environment.Exit(0);
+            //ApiClases.ConsigueAlbaranes();Environment.Exit(0);
+
+            // ApiClases.ConsigueUnSoloAlbaran(); Environment.Exit(0);
+
+
             
-          // ApiClases.ConsigueUnSoloAlbaran(); Environment.Exit(0);
+ 
 
-
-
-
-            //  ApiClases.generaRutas(); Environment.Exit(0);
-            //ApiClases.crearUnaSolaRuta();            Environment.Exit(0);
-
-
-            //    ApiClases.Validacion(); Environment.Exit(0);
-
-            if (args.Length==0)
-            { 
-                ApiClases.ConsigueAlbaranes();Environment.Exit(0);
-            }
+            //if (args.Length==0)
+            //{ 
+            //    ApiClases.ConsigueAlbaranes();Environment.Exit(0);
+            //}
 
             if (args.Length > 0)                {                    
                     foreach (Object argumento in args)
@@ -36,11 +31,11 @@ namespace RepsolTT
                         string argument = argumento.ToString();
                         switch (argument.ToString().ToUpper())
                         {
-                            case "GENERAR_NUEVAS_RUTAS":
+                            case "NUEVAS_RUTAS":
                                 ApiClases.ConsigueAlbaranes();
                             Environment.Exit(0);
                             break;
-                            case "GENERAR_FICHERO":
+                            case "UNA_RUTA":
                                 ApiClases.ConsigueUnSoloAlbaran();
                             Environment.Exit(0);
                             break;
@@ -53,11 +48,12 @@ namespace RepsolTT
                             Environment.Exit(0);
                             Console.ReadKey();
                                 break;
+
                         }
                     }
                 } 
 
-                string[] MiMenu = new string[] { "GENERAR_NUEVAS_RUTAS", "GENERAR_FICHERO", "ACTUALIZAR_FLAG", "INFO_RUTA","SALIR" };
+                string[] MiMenu = new string[] { "NUEVAS_RUTAS", "UNA_RUTA", "ACTUALIZAR_FLAG", "INFO_RUTA","SALIR" };
                 string devMenu = Utils.Menu(MiMenu);
 
                 if (devMenu == "SALIR") Environment.Exit(0);
@@ -66,10 +62,10 @@ namespace RepsolTT
                 switch (devMenu)
                 //switch (Console.Read())
                 {
-                    case "GENERAR_NUEVAS_RUTAS":
+                    case "NUEVAS_RUTAS":
                         ApiClases.ConsigueAlbaranes();
                         break;
-                    case "GENERAR_FICHERO":
+                    case "UNA_RUTA":
                         ApiClases.ConsigueUnSoloAlbaran();
                         break;
                     case "ACTUALIZAR_FLAG":

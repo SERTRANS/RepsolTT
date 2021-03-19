@@ -18,6 +18,7 @@ namespace RepsolTT.Models
             public static string Usuario { get; set; }
             public static string Password { get; set; }
             public static string RutaEDI { get; set; }
+            public static string Departamento { get; set; }
 
         }
 
@@ -96,6 +97,7 @@ namespace RepsolTT.Models
             public string Observaciones2 { get; set; }
             public string Departamento { get; set; }
             public string OrderId { get; set; }
+            public string IdModoEnvio { get; set; }
 
         }
 

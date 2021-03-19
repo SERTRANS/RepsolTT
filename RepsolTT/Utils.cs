@@ -269,8 +269,8 @@ namespace RepsolTT
                     para.Add(i);
             }
 
-
-            ComunesRedux.ClasesComunes.EnviarCorreoElectronicoV2("no-reply@sertrans.es", para, para, asunto, mensaje, null);
+            ArrayList CC= new ArrayList();
+            ComunesRedux.ClasesComunes.EnviarCorreoElectronicoV2("no-reply@sertrans.es", para, CC, asunto, mensaje, null);
 
 
         }

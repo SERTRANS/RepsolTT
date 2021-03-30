@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
@@ -1021,11 +1022,16 @@ namespace RepsolTT
                 int cont = 0;
                 foreach (string item in listaAlbaranes)
                 {
-                    buscarRutas (token, item);
-                    cont += 1;
-                    mensaje = DateTime.Now.ToString() + " Generando(" + cont.ToString() + "/" + listaAlbaranes.Count.ToString() + "):" + item + " DEPARTAMENTO:" + Models.clsUtils.GlobalVariables.Departamento + Environment.NewLine;
-                    mensajeTot = mensajeTot + mensaje;
-                    Console.WriteLine(mensaje);
+                    
+                    string vRet= buscarRutas (token, item);
+                    if (vRet.Substring(0,2) !="KO")
+                    { 
+                        cont += 1;
+                        mensaje = DateTime.Now.ToString() + " Generando(" + cont.ToString() + "/" + listaAlbaranes.Count.ToString() + "):" + item + " DEPARTAMENTO:" + Models.clsUtils.GlobalVariables.Departamento + Environment.NewLine;
+                        mensajeTot = mensajeTot + mensaje;
+                        Console.WriteLine(mensaje);
+                        Utils.WriteToFileLog(DateTime.Now.ToString() + ";" + item + ";" + vRet);
+                    }
                 }
 
               if (cont>0)   Utils.EnviarMailErrores(DateTime.Now.ToString() + "REPSOL GENERADOS", mensajeTot);
@@ -1069,7 +1075,7 @@ namespace RepsolTT
 
 
 
-        public static void buscarRutas(string token,string Albaran)
+        public static string  buscarRutas(string token,string Albaran)
         {
             //string token = DameToken();
 
@@ -1077,6 +1083,13 @@ namespace RepsolTT
 
             Models.clsUtils.DatosRuta todo = new Models.clsUtils.DatosRuta();
             todo  = DameDatosRuta(token, Albaran);
+
+
+            var jsonString = JsonConvert.SerializeObject(todo, Newtonsoft.Json.Formatting.Indented,new JsonConverter[] { new StringEnumConverter() });
+
+            var jsonStringLinea = JsonConvert.SerializeObject(todo, Newtonsoft.Json.Formatting.None, new JsonConverter[] { new StringEnumConverter() });
+
+
             List<Models.clsUtils.Stop> paradas = new List<Models.clsUtils.Stop>();
             paradas = todo.stops;
 
@@ -1090,6 +1103,16 @@ namespace RepsolTT
             string TipoDepartamento = string.Empty;
 
             TipoDepartamento=Utils.DimeDepartamento(vPaisDestinoYCodPostal[1], Peso, vPaisDestinoYCodPostal[0]);
+
+            string tipoDepartamentoExistente = Utils.YaExiste(Albaran);
+
+
+            if (tipoDepartamentoExistente != "" && tipoDepartamentoExistente!=TipoDepartamento )
+            {
+                Utils.EnviarMailErrores(DateTime.Now.ToString() + " REPSOL PEDIDO EN OTRO DEPARTAMENTO", "PEDIDO:" + Albaran + " YA EXISTE EN DEPARTAMENTO " + tipoDepartamentoExistente + " EL DEPARTAMENTO QUE VIENEN NUEVO ES :" + tipoDepartamentoExistente + Environment.NewLine + jsonString);
+                return "KO";
+                
+            }
 
             Models.clsUtils.GlobalVariables.Departamento = TipoDepartamento;
 
@@ -1106,9 +1129,10 @@ namespace RepsolTT
                 string ModoEnvio=DameModoEnvio(todo);
 
                 List<Models.clsUtils.ProtocoloEdiDatos> listaDatos = new List<Models.clsUtils.ProtocoloEdiDatos>();
-                listaDatos= GeneraResto(tipoC, tipoD, ModoEnvio);
+                listaDatos= GeneraResto(tipoC, tipoD, ModoEnvio,Albaran);
                 EmparejarCargaDescarga(token,listaDatos, TipoDepartamento);
             }
+            return jsonStringLinea;
         }
 
         public static string DameModoEnvio(Models.clsUtils.DatosRuta todo)
@@ -1124,7 +1148,7 @@ namespace RepsolTT
                     vRet = "144";
                     break;
                 default:
-                    vRet = "20";
+                    vRet = "144";
                     break;
             }
             return vRet;
@@ -1134,21 +1158,38 @@ namespace RepsolTT
         {
 
             List<string> listaAlbaranes = listaDatos.Select(a => a.AlbaranOrdenante).Distinct().ToList();
+            List<string> listaLineas = new List<string>();
 
-            foreach (string numAlbaranm in listaAlbaranes)            {
+            string nAlbaran=string.Empty;
+            foreach(string item in listaAlbaranes)
+            {
+                nAlbaran = nAlbaran + item + "-";  
+            }
+            nAlbaran = nAlbaran.Substring(0, nAlbaran.Length - 1);
 
+            string todasLineas = string.Empty;
+            foreach (string numAlbaranm in listaAlbaranes)         
+            {
                 List<Models.clsUtils.ProtocoloEdiDatos> filtrat = listaDatos.Where(l => l.AlbaranOrdenante == numAlbaranm).ToList();
 
-                string fic= RelacionaCargaDescarga(token,filtrat);                
-                string[] array = fic.Split(';');
-
-                Utils.GuardaEdi(fic, array[0], TipoDepartamento);
-
+                string fic= RelacionaCargaDescarga(token,filtrat,nAlbaran);
+                todasLineas = todasLineas + fic + Environment.NewLine;
+                listaLineas.Add(fic);
 
             }
+
+
+
+              todasLineas = todasLineas.TrimEnd();
+
+            Utils.GuardaEdi(todasLineas, nAlbaran, TipoDepartamento);
+            
+
+            Validar(token, listaDatos[0].idRuta.ToString());
+
         }
 
-        public static  string  RelacionaCargaDescarga(string token, List<Models.clsUtils.ProtocoloEdiDatos> listaDatos)
+        public static  string  RelacionaCargaDescarga(string token, List<Models.clsUtils.ProtocoloEdiDatos> listaDatos,string nAlbaran)
         {
 
             List<Models.clsUtils.ProtocoloEdiDatos> filtratCarga = listaDatos.Where(l => l.CargaDescarga=="C").ToList();
@@ -1166,7 +1207,7 @@ namespace RepsolTT
             } 
 
 
-            linea = filtratCarga[0].AlbaranOrdenante + ";" +
+            linea = nAlbaran + ";" +
                     Convert.ToDateTime(filtratCarga[0].FechaSalidaExpedicion).ToString("dd/MM/yyyy") + ";" +
                     filtratCarga[0].HoraAcordadaSalida + ";" +
                     Convert.ToDateTime(filtratDesCarga[0].FechaEntregaExpedicion).ToString("dd/MM/yyyy") + ";" +
@@ -1189,20 +1230,20 @@ namespace RepsolTT
                     filtratDesCarga[0].BaremoVolumen + ";" +
                     filtratDesCarga[0].BaremoBultos + ";" +
                     filtratDesCarga[0].BaremoMetrosLineales + ";" +
-                    "" + ";" +
+                    filtratDesCarga[0].Observaciones1  + ";" +
                     "" + ";" +
                     filtratDesCarga[0].OrderId + ";" +
                     filtratDesCarga[0].IdModoEnvio
                     ;
 
-            Validar(token, filtratDesCarga[0].idRuta.ToString());
+            //Validar(token, filtratDesCarga[0].idRuta.ToString());
 
             return linea;
 
         }
 
 
-        public static List<Models.clsUtils.ProtocoloEdiDatos> GeneraResto(List<Models.clsUtils.Stop>  tipoC, List<Models.clsUtils.Stop> tipoD,string IdModoEnvio)
+        public static List<Models.clsUtils.ProtocoloEdiDatos> GeneraResto(List<Models.clsUtils.Stop>  tipoC, List<Models.clsUtils.Stop> tipoD,string IdModoEnvio,string agrupado)
         {
 
             // Cargamos en una lista Cargas y Descargas en listaDatos
@@ -1216,6 +1257,7 @@ namespace RepsolTT
           
                     List<Models.clsUtils.Operation> loperaciones = new List<Models.clsUtils.Operation>();
                     loperaciones = item.operations;
+                   
                     foreach (Models.clsUtils.Operation opitem in loperaciones)
                     {
                         Models.clsUtils.ProtocoloEdiDatos datos = new Models.clsUtils.ProtocoloEdiDatos();
@@ -1242,12 +1284,14 @@ namespace RepsolTT
                         peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
                    
                         orderId = opitem.order_id;
+
                         datos.BaremoPesoBruto = peso.ToString();
                         datos.BaremoVolumen = "0";
                         datos.BaremoPalets = "0";
                         datos.BaremoVolumen = "0";
                         datos.BaremoBultos = "0";
                         datos.BaremoMetrosLineales = "0";
+                        datos.Observaciones1 = agrupado;
                         datos.OrderId = orderId;
                         datos.IdModoEnvio = IdModoEnvio;
                         listaDatos.Add(datos);
@@ -1292,6 +1336,7 @@ namespace RepsolTT
                         datos.BaremoPalets = "0";
                         datos.BaremoVolumen = "0";
                         datos.BaremoBultos = "0";
+                        datos.Observaciones1 = agrupado;
                         datos.BaremoMetrosLineales = "0";
                         datos.IdModoEnvio = IdModoEnvio;
 
@@ -1346,7 +1391,7 @@ namespace RepsolTT
                     {
                         int peso = 0;
                         peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
-                        pesoTotal = peso + peso;
+                        pesoTotal = pesoTotal + peso;
                         orderId = opitem.order_id;
 
                     }

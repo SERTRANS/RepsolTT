@@ -7,8 +7,13 @@ namespace RepsolTT
 {
     class Program
     {
+
+   
+
         static void Main(string[] args)
         {
+ 
+
             Utils.CargaVariables();
 
 

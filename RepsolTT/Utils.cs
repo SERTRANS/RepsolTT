@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Reflection; 
 using System.Text.Json;
+using ComunesRedux;
  
 
 namespace RepsolTT
@@ -60,6 +61,35 @@ namespace RepsolTT
                 }
             }
         }
+
+        public static void WriteToFileLog(string Message)
+        {
+            string path = AppDomain.CurrentDomain.BaseDirectory + "\\Logs";
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            string projectName = Assembly.GetCallingAssembly().GetName().Name;
+            string filepath = AppDomain.CurrentDomain.BaseDirectory + "\\Logs\\Recibidos_" + projectName + "_" + DateTime.Now.Date.ToShortDateString().Replace('/', '_') + ".txt";
+            if (!File.Exists(filepath))
+            {
+                // Create a file to write to.   
+                using (StreamWriter sw = File.CreateText(filepath))
+                {
+                    sw.WriteLine(Message);
+                }
+            }
+            else
+            {
+                using (StreamWriter sw = File.AppendText(filepath))
+                {
+                    sw.WriteLine(Message);
+                }
+            }
+        }
+
+
+
         public static void WriteToFileTMP(string Message)
         {
             string path = AppDomain.CurrentDomain.BaseDirectory + "\\Logs";
@@ -184,11 +214,11 @@ namespace RepsolTT
 
         public static DateTime FromUnixTime(  long unixTime)
         {
+
             DateTimeOffset dateTimeOffSet = DateTimeOffset.FromUnixTimeMilliseconds(unixTime);
             DateTime fecha = dateTimeOffSet.DateTime;
             //fecha = fecha.AddHours(1);
-
-        
+                  
       
             TimeZoneInfo nzTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Romance Standard Time");
             DateTime nzDateTime = TimeZoneInfo.ConvertTimeFromUtc(fecha, nzTimeZone);
@@ -210,19 +240,37 @@ namespace RepsolTT
                 return "21";
 
         
-            if ("43170825".Contains(codPostal.Substring(0, 2)) && kg < 17000 && Pais == "ES")            
+            //if ("43 17 08 25".Contains(codPostal.Substring(0, 2)) && kg < 17000 && Pais == "ES")            
+            //    return "4";
+
+
+            if (((codPostal.Substring(0, 2)=="43") || (codPostal.Substring(0, 2) == "17")  || (codPostal.Substring(0, 2) == "08")  || (codPostal.Substring(0, 2) == "25")) && (kg < 17000) && (Pais == "ES"))
                 return "4";
-            
-            if ("43170825".Contains(codPostal.Substring(0, 2)) && kg > 17000 && Pais == "ES")
+
+
+            if (((codPostal.Substring(0, 2) == "43") || (codPostal.Substring(0, 2) == "17") || (codPostal.Substring(0, 2) == "08") || (codPostal.Substring(0, 2) == "25")) && (kg > 17000) && (Pais == "ES"))
                 return "8";
 
-            if (!"43170825".Contains(codPostal.Substring(0, 2)) && Pais == "ES")
+            if (((codPostal.Substring(0, 2) != "43") && (codPostal.Substring(0, 2) != "17") && (codPostal.Substring(0, 2) != "08") && (codPostal.Substring(0, 2) != "25")) && (Pais == "ES"))
                 return "23";
 
             return "8";
 
         }
 
+
+        public static string  YaExiste(string expalbord)
+        {
+            BaseDatos BaseDatos = new BaseDatos(BaseDatos.MODO_PRODUCCION);
+            object o;
+            o= instSQL.SentenciaSQL_valor("SELECT seccod AS n FROM trans.dbo.EXPEDIC4 exp4 WHERE exp4.expalbord='" + expalbord + "' AND exp4.HolCod=0 AND exp4.ExpSit<>9", BaseDatos.sConexionSERTRANS);
+            
+            
+                return o.ToString();
+                
+
+
+        }
 
         public static string PrettyJson(string unPrettyJson)
         {
@@ -274,9 +322,13 @@ namespace RepsolTT
 
 
         }
+
     
 
 
-
     }
+
+
+
+
 }

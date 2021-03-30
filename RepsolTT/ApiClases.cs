@@ -1104,8 +1104,9 @@ namespace RepsolTT
 
             TipoDepartamento=Utils.DimeDepartamento(vPaisDestinoYCodPostal[1], Peso, vPaisDestinoYCodPostal[0]);
 
+            // comprobamos si existe en otro departamenteo
             string tipoDepartamentoExistente = Utils.YaExiste(Albaran);
-
+            //------------------------------------------------------
 
             if (tipoDepartamentoExistente != "" && tipoDepartamentoExistente!=TipoDepartamento )
             {

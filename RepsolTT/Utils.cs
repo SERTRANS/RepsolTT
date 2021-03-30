@@ -261,14 +261,26 @@ namespace RepsolTT
 
         public static string  YaExiste(string expalbord)
         {
+            try
+            {
+
+            
+
             BaseDatos BaseDatos = new BaseDatos(BaseDatos.MODO_PRODUCCION);
             object o;
-            o= instSQL.SentenciaSQL_valor("SELECT seccod AS n FROM trans.dbo.EXPEDIC4 exp4 WHERE exp4.expalbord='" + expalbord + "' AND exp4.HolCod=0 AND exp4.ExpSit<>9", BaseDatos.sConexionSERTRANS);
+            o= instSQL.SentenciaSQL_valor("SELECT seccod AS n FROM trans.dbo.EXPEDIC4 exp4 WHERE exp4.expordcod=34446 and  exp4.expalbord='" + expalbord + "' AND exp4.HolCod=0 AND exp4.ExpSit<>9", BaseDatos.sConexionSERTRANS);
             
-            
+           if (o==null) 
+                return "";
+           else
                 return o.ToString();
-                
 
+            }
+            catch (Exception ex)
+            {
+                EnviarMailErrores(DateTime.Now.ToString() + "Error Repsol, alb" + expalbord, ex.Message);
+                return "";
+            }
 
         }
 

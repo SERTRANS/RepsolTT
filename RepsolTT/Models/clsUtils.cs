@@ -98,7 +98,7 @@ namespace RepsolTT.Models
             public string Departamento { get; set; }
             public string OrderId { get; set; }
             public string IdModoEnvio { get; set; }
-
+            public string Observaciones { get; set; }
         }
 
         #endregion

@@ -228,31 +228,29 @@ namespace RepsolTT
         }
 
    
-        public static string DimeDepartamento(string codPostal, Int32 kg, string Pais)
+        public static string DimeDepartamento(string codPostal, Int32 kg, string Pais,string modoEnvio)
         {
 
             if (Pais == "MA")
                 return "24";
 
-
-
             if (Pais != "ES")
                 return "21";
 
-        
-            //if ("43 17 08 25".Contains(codPostal.Substring(0, 2)) && kg < 17000 && Pais == "ES")            
-            //    return "4";
+            // si el modo de envio = CT aunque el peso sea menor de 17000 sera local
+            if ( (modoEnvio=="CT" || modoEnvio == "CY") && ((codPostal.Substring(0, 2) == "43") || (codPostal.Substring(0, 2) == "17") || (codPostal.Substring(0, 2) == "08") || (codPostal.Substring(0, 2) == "25")))
+                return "8"; //Local
 
 
             if (((codPostal.Substring(0, 2)=="43") || (codPostal.Substring(0, 2) == "17")  || (codPostal.Substring(0, 2) == "08")  || (codPostal.Substring(0, 2) == "25")) && (kg < 17000) && (Pais == "ES"))
-                return "4";
+                return "4"; //paqueteria
 
 
             if (((codPostal.Substring(0, 2) == "43") || (codPostal.Substring(0, 2) == "17") || (codPostal.Substring(0, 2) == "08") || (codPostal.Substring(0, 2) == "25")) && (kg > 17000) && (Pais == "ES"))
-                return "8";
+                return "8"; //local
 
             if (((codPostal.Substring(0, 2) != "43") && (codPostal.Substring(0, 2) != "17") && (codPostal.Substring(0, 2) != "08") && (codPostal.Substring(0, 2) != "25")) && (Pais == "ES"))
-                return "23";
+                return "23"; //nacional
 
             return "8";
 

@@ -1,13 +1,10 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
 
 namespace RepsolTT
 {
@@ -1062,13 +1059,11 @@ namespace RepsolTT
                 foreach (string value in array)
                 {                    
                     buscarRutas(token, value);
-                }               
-                
+                }                
             }
             else
             {
                 Console.WriteLine(DateTime.Now.ToString() + ",ERROR CONSIGUIENDO TOKEN");
-
             }
 
         }
@@ -1101,8 +1096,11 @@ namespace RepsolTT
             List<string> vPaisDestinoYCodPostal = new List<string>();
             vPaisDestinoYCodPostal=PaisDestinoYCodPostal(tipoD);
             string TipoDepartamento = string.Empty;
+            // string modoEnvio = DameModoEnvio(todo);
+            
+            string modoEnvio = DameModoEnvioTexto(todo);
 
-            TipoDepartamento=Utils.DimeDepartamento(vPaisDestinoYCodPostal[1], Peso, vPaisDestinoYCodPostal[0]);
+            TipoDepartamento =Utils.DimeDepartamento(vPaisDestinoYCodPostal[1], Peso, vPaisDestinoYCodPostal[0],modoEnvio);
 
             // comprobamos si existe en otro departamenteo
             string tipoDepartamentoExistente = Utils.YaExiste(Albaran);
@@ -1121,6 +1119,8 @@ namespace RepsolTT
             {
                 string cargas=GeneraLocalCargas(tipoC);
                 var array = cargas.Split(';');
+
+
                 string desCargas = GeneraLocalDesCargas(token,tipoD,tipoD.Count,array[0]);
 
                 Utils.GuardaEdi(cargas +   desCargas,array[0],TipoDepartamento);
@@ -1135,7 +1135,7 @@ namespace RepsolTT
             }
             return jsonStringLinea;
         }
-
+   
         public static string DameModoEnvio(Models.clsUtils.DatosRuta todo)
         {
             Models.clsUtils.Row IdModoEnvio = todo.related_data[0].row.Where(r => r.key == "ID_MODO_ENVIO").First();
@@ -1154,6 +1154,28 @@ namespace RepsolTT
             }
             return vRet;
         }
+        public static string DameModoEnvioTexto(Models.clsUtils.DatosRuta todo)
+        {
+            Models.clsUtils.Row IdModoEnvio = todo.related_data[0].row.Where(r => r.key == "ID_MODO_ENVIO").First();
+            string vRet = string.Empty;
+            switch (IdModoEnvio.value.ToString())
+            {
+                case "CT":
+                    vRet = "CT";
+                    break;
+                case "CX":
+                    vRet = "CX";
+                    break;
+                case "CY":
+                    vRet = "CY";
+                    break;
+                default:
+                    vRet = "";
+                    break;
+            }
+            return vRet;
+        }
+
 
         public static void EmparejarCargaDescarga(string token ,List<Models.clsUtils.ProtocoloEdiDatos> listaDatos,string TipoDepartamento)
         {
@@ -1177,15 +1199,10 @@ namespace RepsolTT
                 todasLineas = todasLineas + fic + Environment.NewLine;
                 listaLineas.Add(fic);
 
-            }
-
-
-
+            } 
               todasLineas = todasLineas.TrimEnd();
 
-            Utils.GuardaEdi(todasLineas, nAlbaran, TipoDepartamento);
-            
-
+            Utils.GuardaEdi(todasLineas, nAlbaran, TipoDepartamento); 
             Validar(token, listaDatos[0].idRuta.ToString());
 
         }
@@ -1205,7 +1222,7 @@ namespace RepsolTT
                 peso = Convert.ToInt32( pesoSuma.BaremoPesoBruto);
                 pesototal = pesototal + peso;
 
-            } 
+            }
 
 
             linea = nAlbaran + ";" +
@@ -1231,10 +1248,11 @@ namespace RepsolTT
                     filtratDesCarga[0].BaremoVolumen + ";" +
                     filtratDesCarga[0].BaremoBultos + ";" +
                     filtratDesCarga[0].BaremoMetrosLineales + ";" +
-                    filtratDesCarga[0].Observaciones1  + ";" +
+                    filtratDesCarga[0].Observaciones1 + ";" +
                     "" + ";" +
                     filtratDesCarga[0].OrderId + ";" +
-                    filtratDesCarga[0].IdModoEnvio
+                    filtratDesCarga[0].IdModoEnvio + ";" +
+                    filtratDesCarga[0].Observaciones
                     ;
 
             //Validar(token, filtratDesCarga[0].idRuta.ToString());
@@ -1281,6 +1299,8 @@ namespace RepsolTT
                         string CodigoPais = item.country.ToUpper();
                         datos.CodigoPaisRemitente = CodigoPais;
 
+
+
                         int peso = 0;
                         peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
                    
@@ -1315,7 +1335,9 @@ namespace RepsolTT
                         datos.CargaDescarga = "D";
                         DateTime FechaDesCarga = Utils.FromUnixTime(Convert.ToInt64(item.faraway_planned_timestamp));
                         datos.FechaEntregaExpedicion = FechaDesCarga.ToString("dd/MM/yyyy");
-                        string HoraDesCarga = "00:00";
+                        //string HoraDesCarga = "00:00";
+                        string HoraDesCarga = FechaDesCarga.ToString("HH:mm");
+
                         datos.HoraAcordadaEntrega = HoraDesCarga;
                         string Nombre = item.name.ToUpper();
                         datos.NombreDestinatario = Nombre;
@@ -1327,6 +1349,9 @@ namespace RepsolTT
                         datos.CodigoPostalDestinatario = CodigoPostal;
                         string CodigoPais = item.country.ToUpper();
                         datos.CodigoPaisDestinatario = CodigoPais;
+                        string Observaciones = item.time_margin + " " + item.observations.ToString();
+                        datos.Observaciones = Observaciones;
+
 
                         int peso = 0;
                         peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
@@ -1363,9 +1388,9 @@ namespace RepsolTT
         {
             try
             {
-                 
 
-
+                DataTable dtDesCarga = new DataTable();
+                dtDesCarga = creaDatatable();
                 int orden = 0;
                 string linea = "";
                 string orderId = "";
@@ -1394,10 +1419,84 @@ namespace RepsolTT
                         peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
                         pesoTotal = pesoTotal + peso;
                         orderId = opitem.order_id;
+                        linea = linea + albaran + ";" + tipo + ";" + orden + ";" + FechaDesCarga.ToString("dd/MM/yyyy") + ";" + HoraDesCarga + ";" + Nombre + ";" + Domicilio + ";" + Poblacion + ";" + CodigoPostal + ";" + CodigoPais + ";0;" + pesoTotal.ToString() + ";0;0;" + orderId + Environment.NewLine;
+
+                        DataRow row = dtDesCarga.NewRow();
+                        row["Albaran"] = Convert.ToInt32(opitem.related_data[0].row[0].value.ToString()).ToString();
+                        row["AlbaranTodos"] = albaran;
+                        row["Tipo"] = tipo;
+                        row["Orden"] = orden;
+                        row["FechaCarga"] = FechaDesCarga.ToString("dd/MM/yyyy");
+                        row["HoraCarga"] = HoraDesCarga;
+                        row["Nombre"] = Nombre;
+                        row["Domicilio"] = Domicilio;
+                        row["Poblacion"] = Poblacion;
+                        row["CodigoPostal"] = CodigoPostal;
+                        row["CodigoPais"] = CodigoPais;
+                        row["Comodin1"] = "0";
+                        row["Peso"] = Convert.ToDouble(peso);
+                        row["Comodin2"] = "0";
+                        row["Comodin3"] = "0";
+                        row["OrderId"] = orderId;
+                        dtDesCarga.Rows.Add(row);
+
 
                     }
-                    linea = linea + albaran + ";" + tipo + ";" + orden + ";" + FechaDesCarga.ToString("dd/MM/yyyy") + ";" + HoraDesCarga + ";" + Nombre + ";" + Domicilio + ";" + Poblacion + ";" + CodigoPostal + ";" + CodigoPais + ";0;" + pesoTotal.ToString() + ";0;0;" + orderId + Environment.NewLine;
+                    
                 }
+
+
+
+                var query = (from row in dtDesCarga.AsEnumerable()
+                             group row by new
+                             {
+                                 Albaran = row.Field<string>("Albaran"),
+                                 AlbaranTodos = row.Field<string>("AlbaranTodos"),
+                                 Tipo = row.Field<string>("Tipo"),
+                                 Orden = row.Field<string>("Orden"),
+                                 FechaCarga = row.Field<string>("FechaCarga"),
+                                 HoraCarga = row.Field<string>("HoraCarga"),
+                                 Nombre = row.Field<string>("Nombre"),
+                                 Domicilio = row.Field<string>("Domicilio"),
+                                 Poblacion = row.Field<string>("Poblacion"),
+                                 CodigoPostal = row.Field<string>("CodigoPostal"),
+                                 CodigoPais = row.Field<string>("CodigoPais"),
+                                 Comodin1 = row.Field<string>("Comodin1"),
+                                 //Peso = row.Field<double>("Peso"),
+                                 Comodin2 = row.Field<string>("Comodin2"),
+                                 Comodin3 = row.Field<string>("Comodin3"),
+                                 OrderId = row.Field<string>("OrderId")
+                             } into grp
+                             select new
+                             {
+                                 Albaran = grp.Key.Albaran,
+                                 AlbaranTodos = grp.Key.AlbaranTodos,
+                                 Tipo = grp.Key.Tipo,
+                                 Orden = grp.Key.Orden,
+                                 FechaCarga = grp.Key.FechaCarga,
+                                 HoraCarga = grp.Key.HoraCarga,
+                                 Nombre = grp.Key.Nombre,
+                                 Domicilio = grp.Key.Domicilio,
+                                 Poblacion = grp.Key.Poblacion,
+                                 CodigoPostal = grp.Key.CodigoPostal,
+                                 CodigoPais = grp.Key.CodigoPais,
+                                 Comodin1 = grp.Key.Comodin1,
+                                 Peso = grp.Sum(r => r.Field<Double>("Peso")),
+                                 Comodin2 = grp.Key.Comodin2,
+                                 Comodin3 = grp.Key.Comodin3,
+                                 OrderId = grp.Key.OrderId
+                             }).ToList();
+
+                string linea2 = string.Empty;
+
+                foreach (var i in query)
+                {
+                    linea2 = linea2 + i.AlbaranTodos + ";" + i.Tipo + ";" + i.Orden + ";" + i.FechaCarga + ";" + i.HoraCarga + ";" + i.Nombre + ";" + i.Domicilio + ";" + i.Poblacion + ";" + i.CodigoPostal + ";" + i.CodigoPais + ";" + i.Comodin1 + ";" + i.Peso.ToString() + ";" + i.Comodin2 + ";" + i.Comodin3 + ";" + i.OrderId + Environment.NewLine;
+                }
+                linea = linea2;
+
+
+
 
                 Validar(token, idruta);
 
@@ -1420,6 +1519,8 @@ namespace RepsolTT
                 string orderId = "";
 
                 string albaran=string.Empty;
+                DataTable dtCarga = new DataTable();
+                dtCarga= creaDatatable();
                 List<Models.clsUtils.Operation> loperacionesTemp = new List<Models.clsUtils.Operation>();
                 foreach (Models.clsUtils.Stop item in tipoC)
                 {
@@ -1427,11 +1528,16 @@ namespace RepsolTT
                     foreach (Models.clsUtils.Operation opitem in loperacionesTemp)
                     {
                         string a = Convert.ToInt32(opitem.related_data[0].row[0].value.ToString()).ToString();
+
                         if (albaran != Convert.ToInt32(opitem.related_data[0].row[0].value.ToString()).ToString())
-                            albaran = albaran + a + "-";                    }
+                        {
+                            if (!albaran.Contains(a))
+                                    albaran = albaran + a + "-"; 
+                        }
+                          
+                    }
                 }
                 albaran = albaran.Substring(0, albaran.Length - 1);
-
 
 
                 foreach (Models.clsUtils.Stop item in tipoC)
@@ -1455,15 +1561,83 @@ namespace RepsolTT
                     {
              //           string albaran = Convert.ToInt32(opitem.related_data[0].row[0].value.ToString()).ToString();
                         int peso = 0;
-                        peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));
-                        
-                        orderId = opitem.order_id;
+                        peso = Convert.ToInt32(opitem.expected_weight.Replace(".0", ""));                        
+                        orderId = opitem.order_id;                     
+
 
                         linea = linea + albaran + ";" + tipo + ";" + orden + ";" + FechaCarga.ToString("dd/MM/yyyy") + ";" + HoraCarga + ";" + Nombre + ";" + Domicilio + ";" + Poblacion + ";" + CodigoPostal + ";" + CodigoPais + ";0;" + peso.ToString() + ";0;0;" + orderId + Environment.NewLine;
 
+                        DataRow row = dtCarga.NewRow();
+                        row["Albaran"] = Convert.ToInt32(opitem.related_data[0].row[0].value.ToString()).ToString();
+                        row["AlbaranTodos"] = albaran;
+                        row["Tipo"] = tipo;
+                        row["Orden"] = orden;
+                        row["FechaCarga"] = FechaCarga.ToString("dd/MM/yyyy");
+                        row["HoraCarga"] = HoraCarga;
+                        row["Nombre"] = Nombre;
+                        row["Domicilio"] = Domicilio;
+                        row["CodigoPostal"] = CodigoPostal;
+                        row["CodigoPais"] = CodigoPais;
+                        row["Comodin1"] = "0";
+                        row["Peso"] = Convert.ToDouble(peso);
+                        row["Comodin2"] = "0";
+                        row["Comodin3"] = "0";
+                        row["OrderId"] = orderId;
+                        dtCarga.Rows.Add(row);
+
                     }
-                    
+
                 }
+
+
+                var query = (from row in dtCarga.AsEnumerable()
+                             group row by new
+                             {
+                                 Albaran = row.Field<string>("Albaran"),
+                                 AlbaranTodos = row.Field<string>("AlbaranTodos"),
+                                 Tipo = row.Field<string>("Tipo"),
+                                 Orden = row.Field<string>("Orden"),
+                                 FechaCarga = row.Field<string>("FechaCarga"),
+                                 HoraCarga = row.Field<string>("HoraCarga"),
+                                 Nombre = row.Field<string>("Nombre"),
+                                 Domicilio = row.Field<string>("Domicilio"),
+                                 Poblacion = row.Field<string>("Poblacion"),
+                                 CodigoPostal = row.Field<string>("CodigoPostal"),
+                                 CodigoPais = row.Field<string>("CodigoPais"),
+                                 Comodin1 = row.Field<string>("Comodin1"),
+                                 //Peso = row.Field<double>("Peso"),
+                                 Comodin2 = row.Field<string>("Comodin2"),
+                                 Comodin3 = row.Field<string>("Comodin3"),
+                                 OrderId = row.Field<string>("OrderId")
+                             } into grp
+                             select new
+                             {
+                                 Albaran = grp.Key.Albaran,
+                                 AlbaranTodos = grp.Key.AlbaranTodos,
+                                 Tipo = grp.Key.Tipo,
+                                 Orden = grp.Key.Orden,
+                                 FechaCarga = grp.Key.FechaCarga,
+                                 HoraCarga = grp.Key.HoraCarga,
+                                 Nombre = grp.Key.Nombre,
+                                 Domicilio = grp.Key.Domicilio,
+                                 Poblacion  = grp.Key.Poblacion,
+                                 CodigoPostal = grp.Key.CodigoPostal,
+                                 CodigoPais = grp.Key.CodigoPais,
+                                 Comodin1 = grp.Key.Comodin1,
+                                 Peso = grp.Sum(r => r.Field<Double>("Peso")),                                 
+                                 Comodin2 = grp.Key.Comodin2,
+                                 Comodin3 = grp.Key.Comodin3,
+                                 OrderId = grp.Key.OrderId
+                             }).ToList();
+
+                string linea2=string.Empty;
+
+                foreach ( var i in  query)
+                {
+                    linea2 = linea2 + i.AlbaranTodos + ";" + i.Tipo + ";" + i.Orden + ";" + i.FechaCarga + ";" + i.HoraCarga + ";" + i.Nombre + ";" + i.Domicilio + ";" + i.Poblacion + ";" + i.CodigoPostal + ";" + i.CodigoPais + ";" + i.Comodin1 + ";" + i.Peso.ToString() + ";" + i.Comodin2 + ";" + i.Comodin3 + ";" + i.OrderId + Environment.NewLine;
+                }
+                linea = linea2;
+
                 return linea;
             }
             catch (Exception ex)
@@ -1473,6 +1647,29 @@ namespace RepsolTT
             }
         }
 
+        public static DataTable creaDatatable ()
+        {
+            DataTable dtCarga = new DataTable();
+
+            dtCarga.Columns.Add("Albaran", typeof(string));
+            dtCarga.Columns.Add("AlbaranTodos", typeof(string));
+            dtCarga.Columns.Add("Tipo", typeof(string));
+            dtCarga.Columns.Add("Orden", typeof(string));
+            dtCarga.Columns.Add("FechaCarga", typeof(string));
+            dtCarga.Columns.Add("HoraCarga", typeof(string));
+            dtCarga.Columns.Add("Nombre", typeof(string));
+            dtCarga.Columns.Add("Domicilio", typeof(string));
+            dtCarga.Columns.Add("Poblacion", typeof(string));
+            dtCarga.Columns.Add("CodigoPostal", typeof(string));
+            dtCarga.Columns.Add("CodigoPais", typeof(string));
+            dtCarga.Columns.Add("Comodin1", typeof(string));
+            dtCarga.Columns.Add("Peso", typeof(double));
+            dtCarga.Columns.Add("Comodin2", typeof(string));
+            dtCarga.Columns.Add("Comodin3", typeof(string));
+            dtCarga.Columns.Add("OrderId", typeof(string));            
+
+            return dtCarga;
+        }
         public static Int32 PesoCargas(List<Models.clsUtils.Stop> tipoC)
         {
             try
